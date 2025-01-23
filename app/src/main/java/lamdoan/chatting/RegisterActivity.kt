@@ -1,8 +1,6 @@
 package lamdoan.chatting
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,11 +19,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(navController: NavController) {
     // States for input fields
     val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
@@ -50,7 +49,7 @@ fun SignUpScreen() {
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Center vertically
+            verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -85,8 +84,6 @@ fun SignUpScreen() {
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
                     cursorColor = Color.White
                 )
             )
@@ -106,8 +103,6 @@ fun SignUpScreen() {
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
                     cursorColor = Color.White
                 )
             )
@@ -139,8 +134,6 @@ fun SignUpScreen() {
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
                     cursorColor = Color.White
                 )
             )
@@ -161,8 +154,6 @@ fun SignUpScreen() {
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
                     cursorColor = Color.White
                 )
             )
@@ -171,7 +162,7 @@ fun SignUpScreen() {
 
             // Sign Up Button
             Button(
-                onClick = { /* Handle sign up */ },
+                onClick = { navController.navigate("sign_in") }, // Navigate to Sign In screen after sign up
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -183,4 +174,11 @@ fun SignUpScreen() {
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewSignUpScreen() {
+    val navController = rememberNavController()
+    SignUpScreen(navController)
 }

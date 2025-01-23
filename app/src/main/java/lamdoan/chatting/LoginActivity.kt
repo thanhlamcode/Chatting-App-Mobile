@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -22,11 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
     // States for input fields
     val fullName = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
@@ -42,7 +42,7 @@ fun LoginScreen() {
             painter = painterResource(id = R.drawable.img), // Replace with your image
             contentDescription = "Background Image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Ensures the image fills the screen
+            contentScale = ContentScale.Crop
         )
 
         Column(
@@ -50,7 +50,7 @@ fun LoginScreen() {
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Căn giữa theo chiều dọc
+            verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -58,7 +58,7 @@ fun LoginScreen() {
                 text = "Welcome Back",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White, // White text for contrast
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
 
@@ -75,94 +75,50 @@ fun LoginScreen() {
             OutlinedTextField(
                 value = fullName.value,
                 onValueChange = { fullName.value = it },
-                label = {
-                    Text(
-                        text = "Full Name",
-                        color = Color.White // Màu label
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_user), // Icon user
-                        contentDescription = "User Icon",
-                        tint = Color.White // Màu icon
-                    )
-                },
-                placeholder = {
-                    Text(
-                        text = "Enter your name",
-                        color = Color.White.copy(alpha = 0.5f) // Màu placeholder
-                    )
-                },
+                label = { Text(text = "Full Name", color = Color.White) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f), // Màu label khi không focus
-                    cursorColor = Color.White // Màu con trỏ
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    cursorColor = Color.White
                 )
             )
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password Input
             OutlinedTextField(
                 value = password.value,
                 onValueChange = { password.value = it },
-                label = {
-                    Text(
-                        text = "Password",
-                        color = Color.White // Màu label
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_lock), // Icon khóa
-                        contentDescription = "Lock Icon",
-                        tint = Color.White // Màu icon
-                    )
-                },
+                label = { Text(text = "Password", color = Color.White) },
                 trailingIcon = {
                     IconButton(onClick = { isPasswordVisible.value = !isPasswordVisible.value }) {
                         Icon(
                             painter = painterResource(
                                 id = if (isPasswordVisible.value) R.drawable.ic_eye
                                 else R.drawable.ic_eye_off
-                            ), // Icon toggle hiện/ẩn mật khẩu
+                            ),
                             contentDescription = "Toggle Password Visibility",
-                            tint = Color.White // Màu icon
+                            tint = Color.White
                         )
                     }
                 },
                 visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
-                placeholder = {
-                    Text(
-                        text = "Enter your password",
-                        color = Color.White.copy(alpha = 0.5f) // Màu placeholder
-                    )
-                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White, // Màu viền khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Màu viền khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f), // Màu label khi không focus
-                    cursorColor = Color.White // Màu con trỏ
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    cursorColor = Color.White
                 )
             )
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Remember Me and Forgot Password
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,15 +138,14 @@ fun LoginScreen() {
                     text = "Forgot Password?",
                     fontSize = 14.sp,
                     color = Color.White,
-                    modifier = Modifier.clickable { /* Handle click */ }
+                    modifier = Modifier.clickable { /* Navigate to forgot password screen */ }
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Login Button
             Button(
-                onClick = { /* Handle login */ },
+                onClick = { navController.navigate("main") }, // Điều hướng về màn hình chính
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -203,15 +158,22 @@ fun LoginScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sign Up Text
             Text(
                 text = "Don’t have an account? Sign up",
                 fontSize = 14.sp,
                 color = Color.White,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.clickable { /* Handle sign up */ }
+                modifier = Modifier.clickable {
+                    navController.navigate("create_account") // Điều hướng tới màn hình đăng ký
+                }
             )
         }
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun PreviewLoginScreen() {
+    val navController = rememberNavController()
+    LoginScreen(navController)
+}

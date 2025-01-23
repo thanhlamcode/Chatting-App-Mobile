@@ -32,9 +32,9 @@ class MainActivity : ComponentActivity() {
             ChattingAppTheme {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "main") {
-                    composable("main") { MainScreen(navController) }
-                    composable("sign_in") { LoginScreen() }
-                    composable("create_account") { SignUpScreen() }
+                    composable("main") { MainScreen(navController = navController) } // Truyền navController
+                    composable("sign_in") { LoginScreen(navController = navController) } // Truyền navController
+                    composable("create_account") { SignUpScreen(navController = navController) } // Truyền navController
                 }
             }
         }
