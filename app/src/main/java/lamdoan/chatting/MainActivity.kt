@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreen() {
+fun MainScreen() {
     // Background image
     Box(
         modifier = Modifier
