@@ -68,7 +68,7 @@ fun UserListScreen() {
                 }
                 IconButton(onClick = { /* Handle menu action */ }) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_menu),
+                        painter = painterResource(id = R.drawable.ic_bar),
                         contentDescription = "Menu Icon",
                         tint = Color(0xFF6200EA),
                         modifier = Modifier.size(24.dp)
@@ -145,7 +145,7 @@ fun UserRow(
                 .background(Color.LightGray, CircleShape)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_user),
+                painter = painterResource(id = R.drawable.ic_placeholder),
                 contentDescription = "User Avatar",
                 modifier = Modifier.fillMaxSize()
             )
@@ -200,14 +200,17 @@ fun UserRow(
             }
         }
 
-        // Pin Icon
-        if (isPinned) {
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // 3 Dots Icon
+        IconButton(onClick = { /* Handle more options action */ }) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_pin),
-                contentDescription = "Pinned",
-                tint = Color(0xFF6200EA),
-                modifier = Modifier.padding(start = 8.dp)
+                painter = painterResource(id = R.drawable.ic_bar), // Replace with your ic_bar.svg resource
+                contentDescription = "More Options",
+                tint = Color.Gray,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
 }
+
