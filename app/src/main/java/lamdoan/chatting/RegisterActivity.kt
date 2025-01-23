@@ -81,10 +81,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    cursorColor = Color.White
+                    cursorColor = Color.White, // Màu con trỏ
+                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
+                    focusedLabelColor = Color.White, // Màu label khi focus
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
                 )
             )
 
@@ -100,10 +103,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    cursorColor = Color.White
+                    cursorColor = Color.White, // Màu con trỏ
+                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
+                    focusedLabelColor = Color.White, // Màu label khi focus
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
                 )
             )
 
@@ -131,10 +137,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    cursorColor = Color.White
+                    cursorColor = Color.White, // Màu con trỏ
+                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
+                    focusedLabelColor = Color.White, // Màu label khi focus
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
                 )
             )
 
@@ -151,10 +160,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    cursorColor = Color.White
+                    cursorColor = Color.White, // Màu con trỏ
+                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
+                    focusedLabelColor = Color.White, // Màu label khi focus
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
                 )
             )
 
