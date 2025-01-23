@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "762726037481",
+    "project_id": "chatting-app-b41f6",
+    "storage_bucket": "chatting-app-b41f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762726037481:android:a88d53c2e0a4b4f1bcbd78",
+        "android_client_info": {
+          "package_name": "lamdoan.chatting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWykOezLt7BLz8x1RBdp1O0m5XezlawL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
