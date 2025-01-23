@@ -20,6 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import lamdoan.chatting.ui.theme.ChattingAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -27,15 +30,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ChattingAppTheme {
-                LoginScreen()
+                val navController = rememberNavController()
+                NavHost(navController = navController, startDestination = "main") {
+                    composable("main") { MainScreen(navController) }
+                    composable("sign_in") { LoginScreen() }
+                    composable("create_account") { SignUpScreen() }
+                }
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: androidx.navigation.NavController) {
     // Background image
     Box(
         modifier = Modifier
@@ -86,7 +93,9 @@ fun MainScreen() {
                             color = Color.White.copy(alpha = 0.8f),
                             shape = RoundedCornerShape(25.dp)
                         )
-                        .clickable { /* Handle sign in click */ },
+                        .clickable {
+                            navController.navigate("sign_in") // Navigate to the sign-in screen
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -104,9 +113,19 @@ fun MainScreen() {
                     text = "Create an account",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.clickable { /* Handle create account click */ }
+                    modifier = Modifier.clickable {
+                        navController.navigate("create_account") // Navigate to the create account screen
+                    }
                 )
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMainScreen() {
+    // Provide a mock NavController for the preview
+    val navController = rememberNavController()
+    MainScreen(navController)
 }
