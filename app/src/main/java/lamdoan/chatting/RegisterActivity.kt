@@ -1,16 +1,16 @@
 package lamdoan.chatting
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -21,16 +21,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navController: NavController) {
-    // States for input fields
     val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val database = FirebaseDatabase.getInstance().reference
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -81,13 +85,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -103,13 +107,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -137,13 +141,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -160,13 +164,13 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -174,7 +178,60 @@ fun SignUpScreen(navController: NavController) {
 
             // Sign Up Button
             Button(
-                onClick = { navController.navigate("sign_in") }, // Navigate to Sign In screen after sign up
+                onClick = {
+                    scope.launch {
+                        if (email.value.isNotEmpty() && password.value.isNotEmpty() && password.value == confirmPassword.value) {
+                            database.child("users").orderByChild("email").equalTo(email.value)
+                                .get()
+                                .addOnSuccessListener { dataSnapshot ->
+                                    if (dataSnapshot.exists()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Email already exists!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        val userId = database.push().key ?: ""
+                                        val user = mapOf(
+                                            "fullName" to fullName.value,
+                                            "email" to email.value,
+                                            "password" to password.value,
+                                            "uid" to userId
+                                        )
+                                        database.child("users").child(userId).setValue(user)
+                                            .addOnSuccessListener {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Sign up successful and user saved!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                navController.navigate("sign_in")
+                                            }
+                                            .addOnFailureListener {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to save user: ${it.message}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(
+                                        context,
+                                        "Error checking email: ${it.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please fill out all fields correctly",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

@@ -1,18 +1,18 @@
 package lamdoan.chatting
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -23,15 +23,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
     // States for input fields
-    val fullName = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
     val rememberMeChecked = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -73,20 +78,21 @@ fun LoginScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
-                value = fullName.value,
-                onValueChange = { fullName.value = it },
-                label = { Text(text = "Full Name", color = Color.White) },
+                value = email.value,
+                onValueChange = { email.value = it },
+                label = { Text(text = "Email", color = Color.White) },
+                placeholder = { Text("Enter your email", color = Color.White.copy(alpha = 0.5f)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -113,13 +119,13 @@ fun LoginScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ nhập vào
+                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    cursorColor = Color.White, // Màu con trỏ
-                    focusedBorderColor = Color.White, // Viền màu trắng khi focus
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f), // Viền màu trắng nhạt khi không focus
-                    focusedLabelColor = Color.White, // Màu label khi focus
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f) // Màu label khi không focus
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -151,7 +157,32 @@ fun LoginScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { navController.navigate("main") }, // Điều hướng về màn hình chính
+                onClick = {
+                    scope.launch {
+                        if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
+                            firebaseAuth.signInWithEmailAndPassword(email.value, password.value)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        // Đăng nhập thành công
+                                        navController.navigate("main")
+                                    } else {
+                                        // Đăng nhập thất bại
+                                        Toast.makeText(
+                                            context,
+                                            "Login failed: ${task.exception?.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please enter email and password",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -170,7 +201,7 @@ fun LoginScreen(navController: NavController) {
                 color = Color.White,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.clickable {
-                    navController.navigate("create_account") // Điều hướng tới màn hình đăng ký
+                    navController.navigate("create_account")
                 }
             )
         }
