@@ -167,10 +167,12 @@ fun ChatInputBar() {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Nút Microphone
         IconButton(onClick = { /* Handle microphone */ }) {
             Icon(painter = painterResource(id = R.drawable.ic_microphone), contentDescription = "Microphone", tint = Color.White)
         }
 
+        // Trường nhập văn bản
         TextField(
             value = "",
             onValueChange = { /* Handle text change */ },
@@ -192,12 +194,18 @@ fun ChatInputBar() {
             maxLines = 1
         )
 
+        // Nút Gửi File
+        IconButton(onClick = { /* Handle file upload */ }) {
+            Icon(painter = painterResource(id = R.drawable.ic_attach_file), contentDescription = "Attach File", tint = Color.White)
+        }
 
+        // Nút Gửi Tin nhắn
         IconButton(onClick = { /* Handle send */ }) {
             Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color.White)
         }
     }
 }
+
 
 data class MessageItem(val text: String, val isFromMe: Boolean)
 
