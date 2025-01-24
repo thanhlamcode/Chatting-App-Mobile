@@ -31,10 +31,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChattingAppTheme {
                 val navController = rememberNavController()
+                val currentUserId = "currentUserId_placeholder" // Thay thế giá trị thực tế
                 NavHost(navController = navController, startDestination = "main") {
                     composable("main") { MainScreen(navController = navController) } // Truyền navController
                     composable("sign_in") { LoginScreen(navController = navController) } // Truyền navController
                     composable("create_account") { SignUpScreen(navController = navController) } // Truyền navController
+                    composable("UserListScreen") { UserListScreen(currentUserId = currentUserId) } // Thêm dòng này để khai báo UserListScreen
                 }
             }
         }

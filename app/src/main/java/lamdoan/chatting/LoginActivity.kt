@@ -2,7 +2,6 @@ package lamdoan.chatting
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,8 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
+import lamdoan.chatting.models.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +36,6 @@ fun LoginScreen(navController: NavController) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
-    val rememberMeChecked = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val database = FirebaseDatabase.getInstance().reference.child("users")
     val context = LocalContext.current
@@ -135,45 +137,47 @@ fun LoginScreen(navController: NavController) {
                     scope.launch {
                         if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
                             database.orderByChild("email").equalTo(email.value)
-                                .get()
-                                .addOnSuccessListener { dataSnapshot ->
-                                    if (dataSnapshot.exists()) {
-                                        val user = dataSnapshot.children.firstOrNull()
-                                        val savedPassword = user?.child("password")?.value.toString()
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        if (snapshot.exists()) {
+                                            val user = snapshot.children.firstOrNull()
+                                                ?.getValue(User::class.java)
 
-                                        if (savedPassword == password.value) {
-                                            Toasty.success(
-                                                context,
-                                                "Login successful!",
-                                                Toast.LENGTH_SHORT,
-                                                true
-                                            ).show()
-                                            navController.navigate("UserListScreen")
+                                            if (user?.password == password.value) {
+                                                Toasty.success(
+                                                    context,
+                                                    "Login successful!",
+                                                    Toast.LENGTH_SHORT,
+                                                    true
+                                                ).show()
+                                                navController.navigate("UserListScreen")
+                                            } else {
+                                                Toasty.error(
+                                                    context,
+                                                    "Invalid password!",
+                                                    Toast.LENGTH_SHORT,
+                                                    true
+                                                ).show()
+                                            }
                                         } else {
-                                            Toasty.error(
+                                            Toasty.info(
                                                 context,
-                                                "Invalid password!",
+                                                "Email not found!",
                                                 Toast.LENGTH_SHORT,
                                                 true
                                             ).show()
                                         }
-                                    } else {
-                                        Toasty.info(
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+                                        Toasty.error(
                                             context,
-                                            "Email not found!",
+                                            "Login failed: ${error.message}",
                                             Toast.LENGTH_SHORT,
                                             true
                                         ).show()
                                     }
-                                }
-                                .addOnFailureListener {
-                                    Toasty.error(
-                                        context,
-                                        "Login failed: ${it.message}",
-                                        Toast.LENGTH_SHORT,
-                                        true
-                                    ).show()
-                                }
+                                })
                         } else {
                             Toasty.warning(
                                 context,

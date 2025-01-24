@@ -1,5 +1,6 @@
 package lamdoan.chatting
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,17 +24,18 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
+import lamdoan.chatting.models.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navController: NavController) {
-    val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
+    val fullName = remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val database = FirebaseDatabase.getInstance().reference
+    val database = FirebaseDatabase.getInstance().reference.child("users")
     val context = LocalContext.current
 
     Box(
@@ -42,7 +44,7 @@ fun SignUpScreen(navController: NavController) {
     ) {
         // Background Image
         Image(
-            painter = painterResource(id = R.drawable.img), // Thay bằng hình nền của bạn
+            painter = painterResource(id = R.drawable.img),
             contentDescription = "Background Image",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -65,14 +67,6 @@ fun SignUpScreen(navController: NavController) {
                 textAlign = TextAlign.Center
             )
 
-            Text(
-                text = "Sign up to get started!",
-                fontSize = 16.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Full Name Input
@@ -80,18 +74,14 @@ fun SignUpScreen(navController: NavController) {
                 value = fullName.value,
                 onValueChange = { fullName.value = it },
                 label = { Text("Full Name", color = Color.White) },
-                placeholder = { Text("Enter your name", color = Color.White.copy(alpha = 0.5f)) },
+                placeholder = { Text("Enter your full name", color = Color.White.copy(alpha = 0.5f)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -101,19 +91,15 @@ fun SignUpScreen(navController: NavController) {
             OutlinedTextField(
                 value = email.value,
                 onValueChange = { email.value = it },
-                label = { Text("Email Address", color = Color.White) },
+                label = { Text("Email", color = Color.White) },
                 placeholder = { Text("Enter your email", color = Color.White.copy(alpha = 0.5f)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -140,14 +126,10 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -158,19 +140,15 @@ fun SignUpScreen(navController: NavController) {
                 value = confirmPassword.value,
                 onValueChange = { confirmPassword.value = it },
                 label = { Text("Confirm Password", color = Color.White) },
-                placeholder = { Text("Confirm your password", color = Color.White.copy(alpha = 0.5f)) },
+                placeholder = { Text("Re-enter your password", color = Color.White.copy(alpha = 0.5f)) },
                 visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
                 )
             )
 
@@ -181,34 +159,28 @@ fun SignUpScreen(navController: NavController) {
                 onClick = {
                     scope.launch {
                         if (email.value.isNotEmpty() && password.value.isNotEmpty() && password.value == confirmPassword.value) {
-                            database.child("users").orderByChild("email").equalTo(email.value)
-                                .get()
+                            database.orderByChild("email").equalTo(email.value).get()
                                 .addOnSuccessListener { dataSnapshot ->
                                     if (dataSnapshot.exists()) {
-                                        Toasty.warning(context, "Email already exists!", Toasty.LENGTH_SHORT, true).show()
+                                        Toasty.warning(context, "Email already exists!", Toast.LENGTH_SHORT, true).show()
                                     } else {
-                                        val userId = database.push().key ?: ""
-                                        val user = mapOf(
-                                            "fullName" to fullName.value,
-                                            "email" to email.value,
-                                            "password" to password.value,
-                                            "uid" to userId
-                                        )
-                                        database.child("users").child(userId).setValue(user)
+                                        val userId = database.push().key ?: return@addOnSuccessListener
+                                        val newUser = User(id = userId, name = fullName.value, email = email.value, password = password.value)
+                                        database.child(userId).setValue(newUser)
                                             .addOnSuccessListener {
-                                                Toasty.success(context, "Sign up successful!", Toasty.LENGTH_SHORT, true).show()
+                                                Toasty.success(context, "Sign up successful!", Toast.LENGTH_SHORT, true).show()
                                                 navController.navigate("sign_in")
                                             }
                                             .addOnFailureListener {
-                                                Toasty.error(context, "Failed to save user: ${it.message}", Toasty.LENGTH_SHORT, true).show()
+                                                Toasty.error(context, "Failed to save user: ${it.message}", Toast.LENGTH_SHORT, true).show()
                                             }
                                     }
                                 }
                                 .addOnFailureListener {
-                                    Toasty.error(context, "Error checking email: ${it.message}", Toasty.LENGTH_SHORT, true).show()
+                                    Toasty.error(context, "Error checking email: ${it.message}", Toast.LENGTH_SHORT, true).show()
                                 }
                         } else {
-                            Toasty.info(context, "Please fill out all fields correctly", Toasty.LENGTH_SHORT, true).show()
+                            Toasty.info(context, "Please fill out all fields correctly", Toast.LENGTH_SHORT, true).show()
                         }
                     }
                 },
@@ -216,7 +188,6 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .height(50.dp),
-                shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
             ) {
                 Text("Sign Up", fontSize = 18.sp, color = Color.White)

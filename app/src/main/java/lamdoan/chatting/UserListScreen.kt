@@ -5,31 +5,81 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import lamdoan.chatting.R
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.database.*
 
-@Preview(showBackground = true, showSystemUi = true)
+// Model classes
+data class User(
+    val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val avatar: String = ""
+)
+
+data class Chat(
+    val senderId: String = "",
+    val receiverId: String = "",
+    val content: String = "",
+    val isRead: Boolean = false
+)
+
+data class Room(
+    val id: String = "",
+    val userIds: List<String> = emptyList(),
+    val lastMessage: String = "",
+    val lastUpdated: String = ""
+)
+
 @Composable
-fun UserListScreen() {
+fun UserListScreen(currentUserId: String) {
+    val database = FirebaseDatabase.getInstance().reference
+    var users by remember { mutableStateOf(listOf<User>()) }
+    var rooms by remember { mutableStateOf(listOf<Room>()) }
+
+    // Fetch users and rooms from Firebase
+    LaunchedEffect(Unit) {
+        database.child("users").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                users = snapshot.children.mapNotNull {
+                    it.getValue(User::class.java)?.copy(id = it.key ?: "")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error fetching users: ${error.message}")
+            }
+        })
+
+        database.child("rooms").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                rooms = snapshot.children.mapNotNull {
+                    it.getValue(Room::class.java)?.copy(id = it.key ?: "")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error fetching rooms: ${error.message}")
+            }
+        })
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FD))
             .padding(16.dp)
     ) {
-        // Header
         // Header
         Row(
             modifier = Modifier
@@ -38,7 +88,6 @@ fun UserListScreen() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Text "Hello, Johan"
             Column {
                 Text(
                     text = "Hello,",
@@ -46,34 +95,11 @@ fun UserListScreen() {
                     color = Color.Gray
                 )
                 Text(
-                    text = "Johan",
+                    text = "User",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-            }
-
-            // Icons (Search and Menu)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { /* Handle search action */ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_search),
-                        contentDescription = "Search Icon",
-                        tint = Color(0xFF6200EA),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                IconButton(onClick = { /* Handle menu action */ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bar),
-                        contentDescription = "Menu Icon",
-                        tint = Color(0xFF6200EA),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
         }
 
@@ -92,18 +118,20 @@ fun UserListScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // User List
+        // Room List
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            repeat(6) { index ->
-                UserRow(
-                    name = "User $index",
-                    message = "This is a sample message",
-                    time = "09:38 AM",
-                    unreadCount = if (index % 2 == 0) 2 else 0,
-                    isPinned = index == 0
-                )
+            rooms.forEach { room ->
+                val user = users.find { it.id in room.userIds && it.id != currentUserId }
+                if (user != null) {
+                    UserRow(
+                        name = user.name,
+                        message = room.lastMessage,
+                        time = room.lastUpdated,
+                        avatar = user.avatar
+                    )
+                }
             }
         }
     }
@@ -131,8 +159,7 @@ fun UserRow(
     name: String,
     message: String,
     time: String,
-    unreadCount: Int = 0,
-    isPinned: Boolean = false
+    avatar: String? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -144,11 +171,20 @@ fun UserRow(
                 .size(56.dp)
                 .background(Color.LightGray, CircleShape)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_placeholder),
-                contentDescription = "User Avatar",
-                modifier = Modifier.fillMaxSize()
-            )
+            if (avatar.isNullOrEmpty()) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_placeholder),
+                    contentDescription = "User Avatar",
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Image(
+                    painter = rememberAsyncImagePainter(model = avatar),
+                    contentDescription = "User Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -183,34 +219,6 @@ fun UserRow(
                 fontSize = 12.sp,
                 color = Color.Gray
             )
-            if (unreadCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .size(20.dp)
-                        .background(Color(0xFF6200EA), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = unreadCount.toString(),
-                        fontSize = 12.sp,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // 3 Dots Icon
-        IconButton(onClick = { /* Handle more options action */ }) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_bar), // Replace with your ic_bar.svg resource
-                contentDescription = "More Options",
-                tint = Color.Gray,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }
-

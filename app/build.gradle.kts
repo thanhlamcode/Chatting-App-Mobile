@@ -65,5 +65,5 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("com.github.GrenderG:Toasty:1.5.2")
-
+    implementation("io.coil-kt:coil-compose:2.2.2") // Sử dụng phiên bản mới nhất
 }
