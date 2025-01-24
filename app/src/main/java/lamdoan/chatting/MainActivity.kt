@@ -1,5 +1,6 @@
 package lamdoan.chatting
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,15 +28,22 @@ import lamdoan.chatting.ui.theme.ChattingAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Kiểm tra trạng thái đăng nhập từ SharedPreferences
+        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+        val startDestination = if (isLoggedIn) "UserListScreen" else "main"
+
         setContent {
             ChattingAppTheme {
                 val navController = rememberNavController()
                 val currentUserId = "currentUserId_placeholder" // Thay thế giá trị thực tế
-                NavHost(navController = navController, startDestination = "main") {
-                    composable("main") { MainScreen(navController = navController) } // Truyền navController
-                    composable("sign_in") { LoginScreen(navController = navController) } // Truyền navController
-                    composable("create_account") { SignUpScreen(navController = navController) } // Truyền navController
-                    composable("UserListScreen") { UserListScreen(currentUserId = currentUserId) } // Thêm dòng này để khai báo UserListScreen
+
+                NavHost(navController = navController, startDestination = startDestination) {
+                    composable("main") { MainScreen(navController = navController) } // Màn hình chính
+                    composable("sign_in") { LoginScreen(navController = navController) } // Màn hình đăng nhập
+                    composable("create_account") { SignUpScreen(navController = navController) } // Màn hình tạo tài khoản
+                    composable("UserListScreen") { UserListScreen(currentUserId = currentUserId) } // Màn hình danh sách người dùng
                 }
             }
         }
@@ -45,19 +52,19 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(navController: androidx.navigation.NavController) {
-    // Background image
+    // Hình nền
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
         Image(
-            painter = painterResource(id = R.drawable.img), // Replace with your image resource
+            painter = painterResource(id = R.drawable.img), // Thay bằng hình ảnh của bạn
             contentDescription = "Background Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
-        // Content
+        // Nội dung
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,28 +72,27 @@ fun MainScreen(navController: androidx.navigation.NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Title
+            // Tiêu đề
             Text(
                 text = "The best app\nfor your chatting",
-                fontSize = 52.sp, // Kích thước chữ lớn hơn
-                fontWeight = FontWeight.Bold, // In đậm để tạo điểm nhấn
-                color = Color.White, // Màu chữ trắng nổi bật
-                lineHeight = 60.sp, // Khoảng cách dòng phù hợp với fontSize
+                fontSize = 52.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                lineHeight = 60.sp,
                 modifier = Modifier
-                    .fillMaxWidth() // Đảm bảo chữ trải đều theo chiều ngang
-                    .padding(horizontal = 16.dp, vertical = 32.dp) // Cách đều các cạnh
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 32.dp)
                     .align(Alignment.CenterHorizontally)
             )
 
-
-            // Buttons
+            // Nút bấm
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Sign In Button
+                // Nút đăng nhập
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,7 +102,7 @@ fun MainScreen(navController: androidx.navigation.NavController) {
                             shape = RoundedCornerShape(25.dp)
                         )
                         .clickable {
-                            navController.navigate("sign_in") // Navigate to the sign-in screen
+                            navController.navigate("sign_in") // Chuyển đến màn hình đăng nhập
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -110,13 +116,13 @@ fun MainScreen(navController: androidx.navigation.NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Create Account Text
+                // Nút tạo tài khoản
                 Text(
                     text = "Create an account",
                     fontSize = 16.sp,
                     color = Color.White,
                     modifier = Modifier.clickable {
-                        navController.navigate("create_account") // Navigate to the create account screen
+                        navController.navigate("create_account") // Chuyển đến màn hình tạo tài khoản
                     }
                 )
             }
@@ -127,7 +133,6 @@ fun MainScreen(navController: androidx.navigation.NavController) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewMainScreen() {
-    // Provide a mock NavController for the preview
     val navController = rememberNavController()
     MainScreen(navController)
 }

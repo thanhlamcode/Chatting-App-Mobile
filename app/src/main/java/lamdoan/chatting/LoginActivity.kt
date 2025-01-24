@@ -1,5 +1,6 @@
 package lamdoan.chatting
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -17,11 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -40,11 +39,22 @@ fun LoginScreen(navController: NavController) {
     val database = FirebaseDatabase.getInstance().reference.child("users")
     val context = LocalContext.current
 
+    // Kiểm tra trạng thái đăng nhập
+    LaunchedEffect(Unit) {
+        val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+        if (isLoggedIn) {
+            navController.navigate("UserListScreen") {
+                popUpTo("sign_in") { inclusive = true }
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // Background Image
+        // Hình nền
         Image(
             painter = painterResource(id = R.drawable.img),
             contentDescription = "Background Image",
@@ -150,7 +160,20 @@ fun LoginScreen(navController: NavController) {
                                                     Toast.LENGTH_SHORT,
                                                     true
                                                 ).show()
-                                                navController.navigate("UserListScreen")
+
+                                                // Lưu trạng thái đăng nhập và tên người dùng
+                                                val sharedPreferences =
+                                                    context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+                                                with(sharedPreferences.edit()) {
+                                                    putBoolean("isLoggedIn", true)
+                                                    putString("userName", user.name) // Lưu tên người dùng
+                                                    apply()
+                                                }
+
+                                                // Điều hướng tới UserListScreen
+                                                navController.navigate("UserListScreen") {
+                                                    popUpTo("sign_in") { inclusive = true }
+                                                }
                                             } else {
                                                 Toasty.error(
                                                     context,
@@ -211,11 +234,4 @@ fun LoginScreen(navController: NavController) {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    val navController = rememberNavController()
-    LoginScreen(navController)
 }

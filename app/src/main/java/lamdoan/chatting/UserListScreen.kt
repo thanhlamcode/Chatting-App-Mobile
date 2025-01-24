@@ -1,5 +1,6 @@
 package lamdoan.chatting
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,15 +12,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.*
 
-// Model classes
 data class User(
     val id: String = "",
     val name: String = "",
@@ -43,6 +46,10 @@ data class Room(
 
 @Composable
 fun UserListScreen(currentUserId: String) {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+    val userName = sharedPreferences.getString("userName", "User") // Lấy tên người dùng từ SharedPreferences
+
     val database = FirebaseDatabase.getInstance().reference
     var users by remember { mutableStateOf(listOf<User>()) }
     var rooms by remember { mutableStateOf(listOf<Room>()) }
@@ -95,7 +102,7 @@ fun UserListScreen(currentUserId: String) {
                     color = Color.Gray
                 )
                 Text(
-                    text = "User",
+                    text = userName ?: "User", // Hiển thị tên người dùng
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
@@ -136,6 +143,7 @@ fun UserListScreen(currentUserId: String) {
         }
     }
 }
+
 
 @Composable
 fun TabItem(title: String, isSelected: Boolean) {
