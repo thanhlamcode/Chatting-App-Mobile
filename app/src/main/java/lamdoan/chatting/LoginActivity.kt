@@ -23,19 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
-    // States for input fields
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
     val rememberMeChecked = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val firebaseAuth = FirebaseAuth.getInstance()
+    val database = FirebaseDatabase.getInstance().reference.child("users")
     val context = LocalContext.current
 
     Box(
@@ -44,7 +43,7 @@ fun LoginScreen(navController: NavController) {
     ) {
         // Background Image
         Image(
-            painter = painterResource(id = R.drawable.img), // Replace with your image
+            painter = painterResource(id = R.drawable.img),
             contentDescription = "Background Image",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -106,8 +105,7 @@ fun LoginScreen(navController: NavController) {
                     IconButton(onClick = { isPasswordVisible.value = !isPasswordVisible.value }) {
                         Icon(
                             painter = painterResource(
-                                id = if (isPasswordVisible.value) R.drawable.ic_eye
-                                else R.drawable.ic_eye_off
+                                id = if (isPasswordVisible.value) R.drawable.ic_eye else R.drawable.ic_eye_off
                             ),
                             contentDescription = "Toggle Password Visibility",
                             tint = Color.White
@@ -131,48 +129,45 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = rememberMeChecked.value,
-                        onCheckedChange = { rememberMeChecked.value = it }
-                    )
-                    Text("Remember Me", fontSize = 14.sp, color = Color.White)
-                }
-
-                Text(
-                    text = "Forgot Password?",
-                    fontSize = 14.sp,
-                    color = Color.White,
-                    modifier = Modifier.clickable { /* Navigate to forgot password screen */ }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             Button(
                 onClick = {
                     scope.launch {
                         if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
-                            firebaseAuth.signInWithEmailAndPassword(email.value, password.value)
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        // Đăng nhập thành công
-                                        navController.navigate("main")
+                            database.orderByChild("email").equalTo(email.value)
+                                .get()
+                                .addOnSuccessListener { dataSnapshot ->
+                                    if (dataSnapshot.exists()) {
+                                        val user = dataSnapshot.children.firstOrNull()
+                                        val savedPassword = user?.child("password")?.value.toString()
+
+                                        if (savedPassword == password.value) {
+                                            Toast.makeText(
+                                                context,
+                                                "Login successful!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            navController.navigate("UserListScreen")
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Invalid password!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     } else {
-                                        // Đăng nhập thất bại
                                         Toast.makeText(
                                             context,
-                                            "Login failed: ${task.exception?.message}",
+                                            "Email not found!",
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(
+                                        context,
+                                        "Login failed: ${it.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                         } else {
                             Toast.makeText(
