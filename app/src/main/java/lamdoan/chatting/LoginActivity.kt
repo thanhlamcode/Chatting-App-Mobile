@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
+import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,39 +142,44 @@ fun LoginScreen(navController: NavController) {
                                         val savedPassword = user?.child("password")?.value.toString()
 
                                         if (savedPassword == password.value) {
-                                            Toast.makeText(
+                                            Toasty.success(
                                                 context,
                                                 "Login successful!",
-                                                Toast.LENGTH_SHORT
+                                                Toast.LENGTH_SHORT,
+                                                true
                                             ).show()
                                             navController.navigate("UserListScreen")
                                         } else {
-                                            Toast.makeText(
+                                            Toasty.error(
                                                 context,
                                                 "Invalid password!",
-                                                Toast.LENGTH_SHORT
+                                                Toast.LENGTH_SHORT,
+                                                true
                                             ).show()
                                         }
                                     } else {
-                                        Toast.makeText(
+                                        Toasty.info(
                                             context,
                                             "Email not found!",
-                                            Toast.LENGTH_SHORT
+                                            Toast.LENGTH_SHORT,
+                                            true
                                         ).show()
                                     }
                                 }
                                 .addOnFailureListener {
-                                    Toast.makeText(
+                                    Toasty.error(
                                         context,
                                         "Login failed: ${it.message}",
-                                        Toast.LENGTH_SHORT
+                                        Toast.LENGTH_SHORT,
+                                        true
                                     ).show()
                                 }
                         } else {
-                            Toast.makeText(
+                            Toasty.warning(
                                 context,
                                 "Please enter email and password",
-                                Toast.LENGTH_SHORT
+                                Toast.LENGTH_SHORT,
+                                true
                             ).show()
                         }
                     }

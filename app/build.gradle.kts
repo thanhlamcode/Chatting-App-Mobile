@@ -63,4 +63,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.navigation:navigation-compose:2.7.3")
+    implementation("com.github.GrenderG:Toasty:1.5.2")
+
 }

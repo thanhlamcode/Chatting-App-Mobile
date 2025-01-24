@@ -1,6 +1,5 @@
 package lamdoan.chatting
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
+import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +42,7 @@ fun SignUpScreen(navController: NavController) {
     ) {
         // Background Image
         Image(
-            painter = painterResource(id = R.drawable.img), // Replace with your image
+            painter = painterResource(id = R.drawable.img), // Thay bằng hình nền của bạn
             contentDescription = "Background Image",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -185,11 +185,7 @@ fun SignUpScreen(navController: NavController) {
                                 .get()
                                 .addOnSuccessListener { dataSnapshot ->
                                     if (dataSnapshot.exists()) {
-                                        Toast.makeText(
-                                            context,
-                                            "Email already exists!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        Toasty.warning(context, "Email already exists!", Toasty.LENGTH_SHORT, true).show()
                                     } else {
                                         val userId = database.push().key ?: ""
                                         val user = mapOf(
@@ -200,35 +196,19 @@ fun SignUpScreen(navController: NavController) {
                                         )
                                         database.child("users").child(userId).setValue(user)
                                             .addOnSuccessListener {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Sign up successful and user saved!",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                Toasty.success(context, "Sign up successful!", Toasty.LENGTH_SHORT, true).show()
                                                 navController.navigate("sign_in")
                                             }
                                             .addOnFailureListener {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Failed to save user: ${it.message}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                Toasty.error(context, "Failed to save user: ${it.message}", Toasty.LENGTH_SHORT, true).show()
                                             }
                                     }
                                 }
                                 .addOnFailureListener {
-                                    Toast.makeText(
-                                        context,
-                                        "Error checking email: ${it.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toasty.error(context, "Error checking email: ${it.message}", Toasty.LENGTH_SHORT, true).show()
                                 }
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Please fill out all fields correctly",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toasty.info(context, "Please fill out all fields correctly", Toasty.LENGTH_SHORT, true).show()
                         }
                     }
                 },
