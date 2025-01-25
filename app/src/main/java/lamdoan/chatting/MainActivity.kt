@@ -20,9 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import lamdoan.chatting.ui.theme.ChattingAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -43,7 +45,16 @@ class MainActivity : ComponentActivity() {
                     composable("main") { MainScreen(navController = navController) } // Màn hình chính
                     composable("sign_in") { LoginScreen(navController = navController) } // Màn hình đăng nhập
                     composable("create_account") { SignUpScreen(navController = navController) } // Màn hình tạo tài khoản
-                    composable("UserListScreen") { UserListScreen(currentUserId = currentUserId) } // Màn hình danh sách người dùng
+                    composable("UserListScreen") {
+                        UserListScreen(currentUserId = currentUserId, navController = navController)
+                    } // Màn hình danh sách người dùng
+                    composable(
+                        "ChatDetailScreen/{userId}",
+                        arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                        ChatDetailScreen(userId = userId)
+                    } // Màn hình chi tiết trò chuyện
                 }
             }
         }
@@ -127,6 +138,23 @@ fun MainScreen(navController: androidx.navigation.NavController) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ChatDetailScreen(userId: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF212121)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Chatting with user ID: $userId",
+            fontSize = 18.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

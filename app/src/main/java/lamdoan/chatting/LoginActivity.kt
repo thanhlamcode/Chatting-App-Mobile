@@ -50,10 +50,7 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         // Hình nền
         Image(
             painter = painterResource(id = R.drawable.img),
@@ -89,6 +86,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Email input
             OutlinedTextField(
                 value = email.value,
                 onValueChange = { email.value = it },
@@ -110,6 +108,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Password input
             OutlinedTextField(
                 value = password.value,
                 onValueChange = { password.value = it },
@@ -142,73 +141,56 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Login button
             Button(
                 onClick = {
                     scope.launch {
-                        if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
-                            database.orderByChild("email").equalTo(email.value)
-                                .addListenerForSingleValueEvent(object : ValueEventListener {
-                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                        if (snapshot.exists()) {
-                                            val user = snapshot.children.firstOrNull()
-                                                ?.getValue(User::class.java)
+                        if (email.value.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email.value).matches()) {
+                            Toasty.warning(context, "Please enter a valid email address.", Toast.LENGTH_SHORT, true).show()
+                            return@launch
+                        }
+                        if (password.value.isBlank()) {
+                            Toasty.warning(context, "Please enter your password.", Toast.LENGTH_SHORT, true).show()
+                            return@launch
+                        }
 
-                                            if (user?.password == password.value) {
-                                                Toasty.success(
-                                                    context,
-                                                    "Login successful!",
-                                                    Toast.LENGTH_SHORT,
-                                                    true
-                                                ).show()
-
-                                                // Lưu trạng thái đăng nhập và tên người dùng
-                                                val sharedPreferences =
-                                                    context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-                                                with(sharedPreferences.edit()) {
-                                                    putBoolean("isLoggedIn", true)
-                                                    putString("userName", user.name) // Lưu tên người dùng
-                                                    apply()
-                                                }
-
-                                                // Điều hướng tới UserListScreen
-                                                navController.navigate("UserListScreen") {
-                                                    popUpTo("sign_in") { inclusive = true }
-                                                }
-                                            } else {
-                                                Toasty.error(
-                                                    context,
-                                                    "Invalid password!",
-                                                    Toast.LENGTH_SHORT,
-                                                    true
-                                                ).show()
-                                            }
-                                        } else {
-                                            Toasty.info(
+                        database.orderByChild("email").equalTo(email.value)
+                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        val user = snapshot.children.firstOrNull()?.getValue(User::class.java)
+                                        if (user?.password == password.value) {
+                                            Toasty.success(
                                                 context,
-                                                "Email not found!",
+                                                "Login successful!",
                                                 Toast.LENGTH_SHORT,
                                                 true
                                             ).show()
-                                        }
-                                    }
 
-                                    override fun onCancelled(error: DatabaseError) {
-                                        Toasty.error(
-                                            context,
-                                            "Login failed: ${error.message}",
-                                            Toast.LENGTH_SHORT,
-                                            true
-                                        ).show()
+                                            // Save login state
+                                            val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+                                            with(sharedPreferences.edit()) {
+                                                putBoolean("isLoggedIn", true)
+                                                putString("userName", user.name)
+                                                apply()
+                                            }
+
+                                            // Navigate to UserListScreen
+                                            navController.navigate("UserListScreen") {
+                                                popUpTo("sign_in") { inclusive = true }
+                                            }
+                                        } else {
+                                            Toasty.error(context, "Incorrect password!", Toast.LENGTH_SHORT, true).show()
+                                        }
+                                    } else {
+                                        Toasty.info(context, "Email not found!", Toast.LENGTH_SHORT, true).show()
                                     }
-                                })
-                        } else {
-                            Toasty.warning(
-                                context,
-                                "Please enter email and password",
-                                Toast.LENGTH_SHORT,
-                                true
-                            ).show()
-                        }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Toasty.error(context, "Login failed: ${error.message}", Toast.LENGTH_SHORT, true).show()
+                                }
+                            })
                     }
                 },
                 modifier = Modifier
@@ -235,3 +217,4 @@ fun LoginScreen(navController: NavController) {
         }
     }
 }
+
