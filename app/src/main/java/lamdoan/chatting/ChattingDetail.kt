@@ -91,16 +91,21 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
                     val message = MessageItem(
                         text = messageText,
                         isFromMe = true,
-                        senderId = currentUserId
+                        senderId = currentUserId,
+                        timestamp = System.currentTimeMillis() // Thêm timestamp chính xác
                     )
                     val roomRef = database.child("rooms").child(roomId)
                     val messageRef = roomRef.child("messages").push()
 
+                    // Lưu tin nhắn và cập nhật lastMessage, lastUpdated
                     messageRef.setValue(message).addOnSuccessListener {
-                        roomRef.child("lastMessage").setValue(messageText) // Cập nhật lastMessage
-                        roomRef.child("lastUpdated").setValue(System.currentTimeMillis()) // Cập nhật lastUpdated
+                        roomRef.child("lastMessage").setValue(message.text) // Cập nhật nội dung tin nhắn cuối
+                        roomRef.child("lastUpdated").setValue(message.timestamp) // Cập nhật thời gian
+                    }.addOnFailureListener { error ->
+                        println("Error saving message: ${error.message}")
                     }
 
+                    // Xóa nội dung input sau khi gửi
                     messageText = ""
                 }
             }
