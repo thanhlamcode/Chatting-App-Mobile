@@ -42,19 +42,25 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 NavHost(navController = navController, startDestination = startDestination) {
-                    composable("main") { MainScreen(navController = navController) } // Màn hình chính
-                    composable("sign_in") { LoginScreen(navController = navController) } // Màn hình đăng nhập
-                    composable("create_account") { SignUpScreen(navController = navController) } // Màn hình tạo tài khoản
+                    composable("main") { MainScreen(navController = navController) }
+                    composable("sign_in") { LoginScreen(navController = navController) }
+                    composable("create_account") { SignUpScreen(navController = navController) }
                     composable("UserListScreen") {
                         UserListScreen(currentUserId = currentUserId, navController = navController)
-                    } // Màn hình danh sách người dùng
+                    }
+                    composable("ChangeAvatarScreen") {
+                        ChangeAvatarScreen(navController = navController)
+                    }
+                    composable("ChangeNameScreen") {
+                        ChangeNameScreen(navController = navController)
+                    }
                     composable(
                         "ChatDetailScreen/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
                         ChatDetailScreen(userId = userId)
-                    } // Màn hình chi tiết trò chuyện
+                    }
                 }
             }
         }
