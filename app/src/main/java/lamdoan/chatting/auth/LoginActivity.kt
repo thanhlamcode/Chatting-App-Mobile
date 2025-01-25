@@ -1,4 +1,4 @@
-package lamdoan.chatting
+package lamdoan.chatting.auth
 
 import android.content.Context
 import android.widget.Toast
@@ -27,6 +27,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
+import lamdoan.chatting.R
+import lamdoan.chatting.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,9 +1,8 @@
-package lamdoan.chatting
+package lamdoan.chatting.auth
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +23,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
+import lamdoan.chatting.R
+import lamdoan.chatting.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

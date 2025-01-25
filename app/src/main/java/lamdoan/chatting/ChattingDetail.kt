@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,229 +28,97 @@ data class MessageItem(
     val text: String = "",
     val senderId: String = "",
     val timestamp: Long = System.currentTimeMillis()
-)
+) {
+    // Constructor không tham số cần thiết cho Firebase
+    constructor() : this("", "", System.currentTimeMillis())
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
+data class Room(
+    val id: String = "",
+    val userIds: List<String> = emptyList(),
+    val lastMessage: String = "",
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val listMessage: List<MessageItem> = emptyList(),
+    val isSeen: String = "false" // Giá trị mặc định
+) {
+    // Constructor không tham số cần thiết cho Firebase
+    constructor() : this("", emptyList(), "", System.currentTimeMillis(), emptyList(), "false")
+}
+
+
 @Composable
-fun ChatDetailScreen(context: Context, roomId: String, userId: String, navController: NavController) {
+fun ChatDetailScreen(navController: NavController, userId: String) {
+    val database = FirebaseDatabase.getInstance().reference
+    val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
     val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
 
-    val database = FirebaseDatabase.getInstance().reference
-    var messages by remember { mutableStateOf(listOf<MessageItem>()) }
-    var messageText by remember { mutableStateOf("") }
+    var room by remember { mutableStateOf<Room?>(null) }
+    var messageList by remember { mutableStateOf(listOf<MessageItem>()) }
+    var errorMessage by remember { mutableStateOf("") }
 
-    // Fetch messages from Firebase
-    LaunchedEffect(roomId) {
-        database.child("rooms").child(roomId).child("messages")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val fetchedMessages = snapshot.children.mapNotNull {
-                        it.getValue(MessageItem::class.java)
-                    }.sortedBy { it.timestamp }
-                    messages = fetchedMessages
+    LaunchedEffect(Unit) {
+        database.child("rooms").get()
+            .addOnSuccessListener { snapshot ->
+                val rooms = snapshot.children.mapNotNull { child ->
+                    child.getValue(Room::class.java)
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    println("Error fetching messages: ${error.message}")
+                // Tìm phòng có cả currentUserId và userId
+                room = rooms.find { it.userIds.contains(currentUserId) && it.userIds.contains(userId) }
+
+                if (room != null) {
+                    // Lấy danh sách tin nhắn
+                    messageList = room!!.listMessage
+                } else {
+                    // Tạo phòng mới nếu không tồn tại
+                    val newRoomId = database.child("rooms").push().key ?: ""
+
                 }
-            })
+            }
+            .addOnFailureListener { error ->
+                errorMessage = "Lỗi khi tải danh sách phòng: ${error.message}"
+            }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .padding(16.dp)
     ) {
-        // Truyền đúng userId vào ChatHeader
-        ChatHeader(navController = navController, userId = userId)
+        Text(
+            text = "Phòng trò chuyện",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            messages.forEach { message ->
-                ChatBubble(
-                    text = message.text,
-                    isFromMe = message.senderId == currentUserId,
-                    timestamp = message.timestamp
-                )
-            }
-        }
-
-        ChatInputBar(
-            messageText = messageText,
-            onMessageTextChange = { messageText = it },
-            onSend = {
-                if (messageText.isNotBlank()) {
-                    val message = MessageItem(
-                        text = messageText,
-                        senderId = currentUserId,
-                        timestamp = System.currentTimeMillis()
-                    )
-                    val roomRef = database.child("rooms").child(roomId)
-                    val messageRef = roomRef.child("messages").push()
-
-                    messageRef.setValue(message).addOnSuccessListener {
-                        roomRef.child("lastMessage").setValue(message.text)
-                        roomRef.child("lastUpdated").setValue(message.timestamp)
-                    }.addOnFailureListener { error ->
-                        println("Error saving message: ${error.message}")
-                    }
-
-                    messageText = ""
+        if (errorMessage.isNotEmpty()) {
+            Text(text = errorMessage, color = Color.Red)
+        } else if (room != null) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(messageList) { message ->
+                    MessageItemCard(message = message, currentUserId = currentUserId)
                 }
             }
-        )
+        }
     }
 }
 
-
 @Composable
-fun ChatHeader(navController: NavController, userId: String) {
-    val database = FirebaseDatabase.getInstance().reference
-    var user by remember { mutableStateOf<User?>(null) }
-
-    LaunchedEffect(userId) {
-        database.child("users").child(userId).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                user = snapshot.getValue(User::class.java)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("Error fetching user: ${error.message}")
-            }
-        })
-    }
-
+fun MessageItemCard(message: MessageItem, currentUserId: String) {
+    val isCurrentUser = message.senderId == currentUserId
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(8.dp),
+        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
-        IconButton(onClick = { navController.popBackStack() }) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_back),
-                contentDescription = "Back",
-                tint = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Image(
-            painter = rememberAsyncImagePainter(user?.avatar ?: R.drawable.ic_placeholder),
-            contentDescription = "Profile Picture",
+        Text(
+            text = message.text,
             modifier = Modifier
-                .size(40.dp)
-                .background(Color.Gray, CircleShape)
+                .background(if (isCurrentUser) Color.Blue else Color.Gray)
+                .padding(8.dp)
         )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column {
-            Text(user?.name ?: "User", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
-            Text("Online", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-fun ChatBubble(text: String, isFromMe: Boolean, timestamp: Long) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = if (isFromMe) Arrangement.End else Arrangement.Start
-    ) {
-        if (!isFromMe) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_placeholder),
-                contentDescription = "Sender Avatar",
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(end = 8.dp)
-                    .background(Color.Gray, CircleShape)
-            )
-        }
-
-        Column(
-            horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
-        ) {
-            Text(
-                text = text,
-                modifier = Modifier
-                    .background(
-                        color = if (isFromMe) Color(0xFF4CAF50) else Color(0xFFBB86FC),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(12.dp),
-                color = Color.White,
-                fontSize = 16.sp
-            )
-            Text(
-                text = getTimeAgo(timestamp),
-                color = Color.Gray,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-
-        if (isFromMe) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_placeholder),
-                contentDescription = "My Avatar",
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(start = 8.dp)
-                    .background(Color.Gray, CircleShape)
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ChatInputBar(
-    messageText: String,
-    onMessageTextChange: (String) -> Unit,
-    onSend: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF4CAF50))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextField(
-            value = messageText,
-            onValueChange = onMessageTextChange,
-            placeholder = {
-                Text(
-                    text = "Type a message",
-                    color = Color.White.copy(alpha = 0.5f)
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.Transparent,
-                cursorColor = Color.White,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp),
-            textStyle = LocalTextStyle.current.copy(color = Color.White),
-            maxLines = 1
-        )
-
-        IconButton(onClick = { onSend() }) {
-            Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color.White)
-        }
     }
 }

@@ -24,6 +24,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import lamdoan.chatting.auth.LoginScreen
+import lamdoan.chatting.auth.SignUpScreen
 import lamdoan.chatting.ui.theme.ChattingAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -54,28 +56,9 @@ class MainActivity : ComponentActivity() {
                     composable("ChangeNameScreen") {
                         ChangeNameScreen(navController = navController)
                     }
-                    composable(
-                        "ChatDetailScreen/{userId}/{roomId}",
-                        arguments = listOf(
-                            navArgument("userId") { type = NavType.StringType },
-                            navArgument("roomId") { type = NavType.StringType }
-                        )
-                    ) { backStackEntry ->
+                    composable("chat_detail/{userId}") { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
-                        val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-
-                        // Kiểm tra tham số
-                        if (userId.isNotEmpty() && roomId.isNotEmpty()) {
-                            ChatDetailScreen(
-                                context = this@MainActivity,
-                                roomId = roomId,
-                                userId = userId,
-                                navController = navController
-                            )
-                        } else {
-                            // Xử lý lỗi tham số không hợp lệ (nếu cần)
-                            Text("Error: Missing parameters!")
-                        }
+                        ChatDetailScreen(navController, userId)
                     }
                 }
             }

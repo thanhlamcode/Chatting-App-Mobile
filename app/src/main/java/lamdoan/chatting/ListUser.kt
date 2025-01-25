@@ -87,7 +87,7 @@ fun UserCard(user: User, navController: NavController) {
             .padding(8.dp)
             .background(Color(0xFFEFEFEF))
             .clickable {
-                navController.navigate("chat/${user.id}")
+                navController.navigate("chat_detail/${user.id}") // Truyền ID của người dùng được nhấp
             }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -110,3 +110,4 @@ fun UserCard(user: User, navController: NavController) {
         }
     }
 }
+

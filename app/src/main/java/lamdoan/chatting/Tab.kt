@@ -27,16 +27,10 @@ data class User(
     val name: String = "",
     val email: String = "",
     val avatar: String = "",
-    val password: String = ""
+    val password: String = "",
 )
 
-data class Room(
-    val id: String = "",
-    val userIds: List<String> = emptyList(),
-    val lastMessage: String = "",
-    val lastUpdated: Long = System.currentTimeMillis(),
-    val isSeen: Map<String, Boolean> = emptyMap()
-)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,19 +112,6 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
             filteredRooms.forEach { room ->
                 val otherUserId = room.userIds.firstOrNull { it != currentUserId }
                 val otherUser = users.find { it.id == otherUserId }
-
-                if (otherUser != null) {
-                    UserRow(
-                        name = otherUser.name,
-                        lastMessage = room.lastMessage.ifEmpty { "Chưa có tin nhắn nào" },
-                        time = room.lastUpdated,
-                        isSeen = room.isSeen[currentUserId] ?: true,
-                        avatar = otherUser.avatar,
-                        onClick = {
-                            navController.navigate("ChatDetailScreen/${otherUser.id}/${room.id}")
-                        }
-                    )
-                }
             }
 
             if (filteredRooms.isEmpty()) {
@@ -240,18 +221,6 @@ fun ChatListScreen(navController: NavController) {
                 val otherUserId = room.userIds.firstOrNull { it != currentUserId }
                 val otherUser = users.find { it.id == otherUserId }
 
-                if (otherUser != null) {
-                    UserRow(
-                        name = otherUser.name,
-                        lastMessage = room.lastMessage.ifEmpty { "Chưa có tin nhắn nào" },
-                        time = room.lastUpdated,
-                        isSeen = room.isSeen[currentUserId] ?: true,
-                        avatar = otherUser.avatar,
-                        onClick = {
-                            navController.navigate("ChatDetailScreen/${otherUser.id}/${room.id}")
-                        }
-                    )
-                }
             }
 
             if (filteredRooms.isEmpty()) {
