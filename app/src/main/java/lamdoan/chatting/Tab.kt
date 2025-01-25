@@ -22,16 +22,6 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.*
 
-data class User(
-    val id: String = "",
-    val name: String = "",
-    val email: String = "",
-    val avatar: String = "",
-    val password: String = "",
-)
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(currentUserId: String, navController: NavController) {

@@ -23,23 +23,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.database.*
 
-data class MessageItem(
-    val text: String = "",
-    val senderId: String = "",
-    val timestamp: Long = System.currentTimeMillis()
-) {
-    constructor() : this("", "", System.currentTimeMillis()) // Required for Firebase
-}
-
-data class Room(
-    val id: String = "",
-    val userIds: List<String> = emptyList(),
-    val lastMessage: String = "",
-    val lastUpdated: Long = System.currentTimeMillis()
-) {
-    constructor() : this("", emptyList(), "", System.currentTimeMillis()) // Required for Firebase
-}
-
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
