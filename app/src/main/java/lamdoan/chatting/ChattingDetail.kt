@@ -43,6 +43,13 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
 
     val listState = rememberLazyListState()
 
+    // Tự động cuộn xuống khi `messageList` thay đổi
+    LaunchedEffect(messageList) {
+        if (messageList.isNotEmpty()) {
+            listState.animateScrollToItem(messageList.size - 1)
+        }
+    }
+
     LaunchedEffect(Unit) {
         database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
             userName = snapshot.child("name").getValue(String::class.java) ?: "Người dùng"
@@ -196,6 +203,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     )
 }
+
 
 
 @Composable
