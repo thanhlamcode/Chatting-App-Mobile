@@ -43,7 +43,7 @@ data class Room(
 @Composable
 fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Đoạn Chat", "Người Dùng")
+    val tabs = listOf("Đoạn Chat", "Người Dùng", "Cài Đặt") // Thêm tab Cài Đặt
 
     Column(
         modifier = Modifier
@@ -60,8 +60,8 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
             contentColor = Color.White,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp) // Thêm khoảng cách hai bên (tuỳ chọn)
-                .zIndex(1f) // Đảm bảo TabRow không bị che
+                .padding(horizontal = 8.dp)
+                .zIndex(1f)
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
@@ -72,16 +72,53 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp)) // Khoảng cách giữa TabRow và nội dung
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Nội dung của từng tab
         when (selectedTabIndex) {
             0 -> ChatListScreen(currentUserId = currentUserId, navController = navController)
             1 -> UserListScreen(currentUserId = currentUserId, navController = navController)
+            2 -> SettingsScreen(navController = navController) // Gọi màn hình Cài Đặt
         }
     }
 }
 
+
+@Composable
+fun SettingsScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF212121))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Cài Đặt",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { /* Thêm hành động, ví dụ: Đăng xuất */ },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+        ) {
+            Text(text = "Đăng xuất", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { /* Hành động khác */ },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+        ) {
+            Text(text = "Thay đổi mật khẩu", color = Color.White)
+        }
+    }
+}
 
 
 
