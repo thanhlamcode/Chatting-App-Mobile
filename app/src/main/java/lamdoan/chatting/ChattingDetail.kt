@@ -1,7 +1,7 @@
 package lamdoan.chatting
 
-import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,19 +10,22 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.*
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatDetailScreen(navController: NavController, userId: String) {
@@ -32,6 +35,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
 
     var userName by remember { mutableStateOf("Người dùng") }
+    var avatarUrl by remember { mutableStateOf("") }
     var room by remember { mutableStateOf<Room?>(null) }
     var messageList by remember { mutableStateOf(listOf<MessageItem>()) }
     var newMessageText by remember { mutableStateOf("") }
@@ -40,13 +44,12 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        database.child("users").child(userId).child("name").get()
-            .addOnSuccessListener { snapshot ->
-                userName = snapshot.getValue(String::class.java) ?: "Người dùng"
-            }
-            .addOnFailureListener {
-                errorMessage = "Lỗi khi tải tên người dùng: ${it.message}"
-            }
+        database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
+            userName = snapshot.child("name").getValue(String::class.java) ?: "Người dùng"
+            avatarUrl = snapshot.child("avatar").getValue(String::class.java) ?: ""
+        }.addOnFailureListener {
+            errorMessage = "Lỗi khi tải thông tin người dùng: ${it.message}"
+        }
 
         database.child("rooms").get().addOnSuccessListener { snapshot ->
             val rooms = snapshot.children.mapNotNull { it.getValue(Room::class.java) }
@@ -85,19 +88,44 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     }
 
-    LaunchedEffect(messageList) {
-        if (messageList.isNotEmpty()) {
-            listState.animateScrollToItem(messageList.size - 1)
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat với $userName", color = Color.White) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (avatarUrl.isNotEmpty()) {
+                            Image(
+                                painter = rememberAsyncImagePainter(avatarUrl),
+                                contentDescription = "Avatar",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color.Gray)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Chat với $userName", color = Color.White, maxLines = 1)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        // Tắt thông báo - Logic tùy chỉnh
+                    }) {
+                        Icon(Icons.Default.NotificationsOff, contentDescription = "Tắt thông báo", tint = Color.White)
+                    }
+                    IconButton(onClick = {
+                        // Xóa toàn bộ tin nhắn
+                        room?.let {
+                            database.child("rooms").child(it.id).child("listMessage").removeValue()
+                            messageList = listOf()
+                        }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Xóa trò chuyện", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.DarkGray)
@@ -108,7 +136,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.DarkGray)
-                    .padding(paddingValues) // Đảm bảo nội dung không bị đè lên TopAppBar
+                    .padding(paddingValues)
                     .padding(8.dp)
             ) {
                 LazyColumn(
@@ -168,6 +196,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     )
 }
+
 
 @Composable
 fun MessageCard(message: MessageItem, currentUserId: String) {
