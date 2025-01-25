@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -53,6 +54,9 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     var newMessageText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
+    // Tạo LazyListState để quản lý trạng thái cuộn
+    val listState = rememberLazyListState()
+
     // Load or create chat room
     LaunchedEffect(Unit) {
         database.child("rooms").get().addOnSuccessListener { snapshot ->
@@ -60,7 +64,6 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
             room = rooms.find { it.userIds.containsAll(listOf(currentUserId, userId)) }
 
             if (room != null) {
-                // Lắng nghe thay đổi của danh sách tin nhắn
                 database.child("rooms").child(room!!.id).child("listMessage")
                     .addChildEventListener(object : ChildEventListener {
                         override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
@@ -78,7 +81,6 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                         }
                     })
             } else {
-                // Tạo phòng mới nếu không tồn tại
                 val newRoomId = database.child("rooms").push().key ?: ""
                 val newRoom = Room(
                     id = newRoomId,
@@ -94,6 +96,13 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     }
 
+    // Cuộn xuống tin nhắn cuối cùng khi messageList thay đổi
+    LaunchedEffect(messageList) {
+        if (messageList.isNotEmpty()) {
+            listState.animateScrollToItem(messageList.size - 1)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,22 +115,27 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
             )
         },
         content = {
-            Column(modifier = Modifier.fillMaxSize().padding(8.dp).background(Color(0xFFEDE7F6))) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+                    .background(Color(0xFFEDE7F6))
+            ) {
                 LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth()
+                    state = listState, // Gắn LazyListState vào LazyColumn
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 ) {
-                    // Thêm khoảng cách 40dp ở đầu danh sách
-                    item {
-                        Spacer(modifier = Modifier.height(40.dp))
-                    }
-
                     items(messageList) { message ->
                         MessageCard(message, currentUserId)
                     }
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextField(
@@ -169,7 +183,9 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
 fun MessageCard(message: MessageItem, currentUserId: String) {
     val isCurrentUser = message.senderId == currentUserId
     Row(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
     ) {
         Box(
@@ -188,3 +204,4 @@ fun MessageCard(message: MessageItem, currentUserId: String) {
         }
     }
 }
+
