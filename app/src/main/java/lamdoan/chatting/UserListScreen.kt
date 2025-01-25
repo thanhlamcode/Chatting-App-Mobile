@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
 data class User(
@@ -82,44 +83,6 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
         }
     }
 }
-
-
-@Composable
-fun SettingsScreen(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF212121))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Cài Đặt",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { /* Thêm hành động, ví dụ: Đăng xuất */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-        ) {
-            Text(text = "Đăng xuất", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { /* Hành động khác */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-        ) {
-            Text(text = "Thay đổi mật khẩu", color = Color.White)
-        }
-    }
-}
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
