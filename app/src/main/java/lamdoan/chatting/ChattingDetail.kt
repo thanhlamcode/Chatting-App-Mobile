@@ -1,21 +1,18 @@
 package lamdoan.chatting
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.outlined.Call
-import androidx.compose.material.icons.outlined.VideoCall
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,15 +23,16 @@ import com.google.firebase.database.*
 
 data class MessageItem(
     val text: String = "",
-    val isFromMe: Boolean = false,
     val senderId: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navController: NavController) {
+fun ChatDetailScreen(context: Context, roomId: String, userId: String, navController: NavController) {
+    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+    val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
+
     val database = FirebaseDatabase.getInstance().reference
     var messages by remember { mutableStateOf(listOf<MessageItem>()) }
     var messageText by remember { mutableStateOf("") }
@@ -46,7 +44,7 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val fetchedMessages = snapshot.children.mapNotNull {
                         it.getValue(MessageItem::class.java)
-                    }.sortedBy { it.timestamp } // Sort messages by timestamp
+                    }.sortedBy { it.timestamp }
                     messages = fetchedMessages
                 }
 
@@ -59,14 +57,13 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black) // Set background color
+            .background(Color.Black)
     ) {
-        // Header
+        // Truyền đúng userId vào ChatHeader
         ChatHeader(navController = navController, userId = userId)
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Messages
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -82,7 +79,6 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
             }
         }
 
-        // Input Bar
         ChatInputBar(
             messageText = messageText,
             onMessageTextChange = { messageText = it },
@@ -90,22 +86,19 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
                 if (messageText.isNotBlank()) {
                     val message = MessageItem(
                         text = messageText,
-                        isFromMe = true,
                         senderId = currentUserId,
-                        timestamp = System.currentTimeMillis() // Thêm timestamp chính xác
+                        timestamp = System.currentTimeMillis()
                     )
                     val roomRef = database.child("rooms").child(roomId)
                     val messageRef = roomRef.child("messages").push()
 
-                    // Lưu tin nhắn và cập nhật lastMessage, lastUpdated
                     messageRef.setValue(message).addOnSuccessListener {
-                        roomRef.child("lastMessage").setValue(message.text) // Cập nhật nội dung tin nhắn cuối
-                        roomRef.child("lastUpdated").setValue(message.timestamp) // Cập nhật thời gian
+                        roomRef.child("lastMessage").setValue(message.text)
+                        roomRef.child("lastUpdated").setValue(message.timestamp)
                     }.addOnFailureListener { error ->
                         println("Error saving message: ${error.message}")
                     }
 
-                    // Xóa nội dung input sau khi gửi
                     messageText = ""
                 }
             }
@@ -130,9 +123,6 @@ fun ChatHeader(navController: NavController, userId: String) {
             }
         })
     }
-
-    Spacer(modifier = Modifier.height(40.dp)) // Tạo khoảng cách với cạnh trên
-
 
     Row(
         modifier = Modifier
@@ -167,35 +157,58 @@ fun ChatHeader(navController: NavController, userId: String) {
     }
 }
 
-
-
 @Composable
 fun ChatBubble(text: String, isFromMe: Boolean, timestamp: Long) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
+        horizontalArrangement = if (isFromMe) Arrangement.End else Arrangement.Start
     ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .background(
-                    color = if (isFromMe) Color(0xFF4CAF50) else Color(0xFFBB86FC),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(12.dp),
-            color = Color.White,
-            fontSize = 16.sp
-        )
-        Text(
-            text = getTimeAgo(timestamp),
-            color = Color.Gray,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+        if (!isFromMe) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_placeholder),
+                contentDescription = "Sender Avatar",
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(end = 8.dp)
+                    .background(Color.Gray, CircleShape)
+            )
+        }
+
+        Column(
+            horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
+        ) {
+            Text(
+                text = text,
+                modifier = Modifier
+                    .background(
+                        color = if (isFromMe) Color(0xFF4CAF50) else Color(0xFFBB86FC),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(12.dp),
+                color = Color.White,
+                fontSize = 16.sp
+            )
+            Text(
+                text = getTimeAgo(timestamp),
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+
+        if (isFromMe) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_placeholder),
+                contentDescription = "My Avatar",
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(start = 8.dp)
+                    .background(Color.Gray, CircleShape)
+            )
+        }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -229,7 +242,7 @@ fun ChatInputBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp),
-            textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
+            textStyle = LocalTextStyle.current.copy(color = Color.White),
             maxLines = 1
         )
 

@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
                     composable("sign_in") { LoginScreen(navController = navController) }
                     composable("create_account") { SignUpScreen(navController = navController) }
                     composable("UserListScreen") {
+                        // Đảm bảo truyền currentUserId vào UserListScreen
                         ChatAndUserTabsScreen(currentUserId = currentUserId, navController = navController)
                     }
                     composable("ChangeAvatarScreen") {
@@ -62,12 +63,19 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
                         val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-                        ChatDetailScreen(
-                            currentUserId = currentUserId, // Truyền currentUserId từ MainActivity
-                            userId = userId,
-                            roomId = roomId,
-                            navController = navController
-                        )
+
+                        // Kiểm tra tham số
+                        if (userId.isNotEmpty() && roomId.isNotEmpty()) {
+                            ChatDetailScreen(
+                                context = this@MainActivity,
+                                roomId = roomId,
+                                userId = userId,
+                                navController = navController
+                            )
+                        } else {
+                            // Xử lý lỗi tham số không hợp lệ (nếu cần)
+                            Text("Error: Missing parameters!")
+                        }
                     }
                 }
             }
