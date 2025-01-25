@@ -35,24 +35,19 @@ data class Room(
     val id: String = "",
     val userIds: List<String> = emptyList(),
     val lastMessage: String = "",
-    val lastUpdated: String = ""
+    val lastUpdated: Long = System.currentTimeMillis()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserListScreen(currentUserId: String, navController: NavController) {
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-    val userName = sharedPreferences.getString("userName", "User")
-    val avatarUrl = sharedPreferences.getString("avatarUrl", "")
-    var expanded by remember { mutableStateOf(false) } // State for DropdownMenu
-
     val database = FirebaseDatabase.getInstance().reference
     var users by remember { mutableStateOf(listOf<User>()) }
     var rooms by remember { mutableStateOf(listOf<Room>()) }
     var searchText by remember { mutableStateOf("") }
 
-    // Fetch users and rooms from Firebase
+    // Lấy danh sách người dùng và phòng từ Firebase
     LaunchedEffect(Unit) {
         database.child("users").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -62,7 +57,7 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                println("Error fetching users: ${error.message}")
+                println("Lỗi khi tải người dùng: ${error.message}")
             }
         })
 
@@ -74,7 +69,7 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                println("Error fetching rooms: ${error.message}")
+                println("Lỗi khi tải phòng: ${error.message}")
             }
         })
     }
@@ -85,127 +80,75 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
             .background(Color(0xFF212121))
             .padding(16.dp)
     ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Hello,",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = userName ?: "User",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            // Dropdown Menu for Options
-            // Dropdown Menu for Options
-            Box(
-                modifier = Modifier
-                    .wrapContentSize(Alignment.TopEnd)
-            ) {
-                IconButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.size(48.dp) // Tăng kích thước vùng nhấn
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_menu), // Thay bằng biểu tượng của bạn
-                        contentDescription = "Menu Button",
-                        tint = Color.White, // Màu biểu tượng
-                        modifier = Modifier.size(32.dp) // Kích thước biểu tượng
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Color.White)
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            expanded = false
-                            navController.navigate("ChangeAvatarScreen")
-                        },
-                        text = { Text("Change Avatar") }
-                    )
-                    DropdownMenuItem(
-                        onClick = {
-                            expanded = false
-                            navController.navigate("ChangeNameScreen")
-                        },
-                        text = { Text("Change Name") }
-                    )
-                }
-            }
-
-        }
+        // Tiêu đề
+        Text(
+            text = "Danh sách người dùng",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Search Bar
+        // Ô tìm kiếm
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
-            placeholder = { Text("Search for a user", color = Color.White.copy(alpha = 0.5f)) },
+            placeholder = { Text("Tìm kiếm người dùng...", color = Color.White.copy(alpha = 0.5f)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            textStyle = LocalTextStyle.current.copy(color = Color.White),
+                .padding(horizontal = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 cursorColor = Color.White,
                 focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                focusedLabelColor = Color.White,
-                unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
+                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // User List Section
-        Text(
-            text = "All Users",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
+        // Danh sách người dùng
         val filteredUsers = users.filter { user ->
             user.name.contains(searchText, ignoreCase = true) && user.id != currentUserId
         }
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             filteredUsers.forEach { user ->
                 UserRow(
                     name = user.name,
                     message = user.email,
-                    time = "",
                     avatar = user.avatar,
-                    onClick = { navController.navigate("ChatDetailScreen/${user.id}") }
+                    onClick = {
+                        // Kiểm tra xem phòng đã tồn tại chưa
+                        val existingRoom = rooms.find { room ->
+                            room.userIds.contains(currentUserId) && room.userIds.contains(user.id)
+                        }
+
+                        val roomId = existingRoom?.id ?: run {
+                            // Tạo phòng mới nếu chưa tồn tại
+                            val newRoom = Room(
+                                id = database.child("rooms").push().key ?: "",
+                                userIds = listOf(currentUserId, user.id),
+                                lastMessage = "",
+                                lastUpdated = System.currentTimeMillis()
+                            )
+                            database.child("rooms").child(newRoom.id).setValue(newRoom)
+                            newRoom.id
+                        }
+
+                        navController.navigate("ChatDetailScreen/${user.id}/$roomId")
+                    }
                 )
             }
 
-            // Show a message if no users are found
+            // Thông báo nếu không tìm thấy người dùng
             if (filteredUsers.isEmpty()) {
                 Text(
-                    text = "No users found.",
+                    text = "Không tìm thấy người dùng nào.",
                     color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
@@ -213,73 +156,40 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
     }
 }
 
-
 @Composable
 fun UserRow(
     name: String,
     message: String,
-    time: String,
-    avatar: String? = null,
-    onClick: (() -> Unit)? = null
+    avatar: String?,
+    onClick: (() -> Unit)?
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick?.invoke() },
+            .clickable { onClick?.invoke() }
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Profile Picture
-        Box(
+        // Ảnh đại diện
+        Image(
+            painter = if (avatar.isNullOrEmpty()) painterResource(id = R.drawable.ic_placeholder)
+            else rememberAsyncImagePainter(model = avatar),
+            contentDescription = "Ảnh đại diện",
             modifier = Modifier
-                .size(56.dp)
-                .background(Color.Gray, CircleShape)
-        ) {
-            if (avatar.isNullOrEmpty()) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_placeholder),
-                    contentDescription = "User Avatar",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = rememberAsyncImagePainter(model = avatar),
-                    contentDescription = "User Avatar",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color.Gray),
+            contentScale = ContentScale.Crop
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Message Details
+        // Thông tin người dùng
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            Text(
-                text = name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = message,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Time
-        if (time.isNotEmpty()) {
-            Text(
-                text = time,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+            Text(text = name, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+            Text(text = message, color = Color.Gray, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

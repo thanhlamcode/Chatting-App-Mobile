@@ -11,40 +11,58 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.VideoCall
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.database.*
+
+data class MessageItem(
+    val text: String = "",
+    val isFromMe: Boolean = false,
+    val senderId: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatDetailScreen() {
-    val messages = remember {
-        listOf(
-            MessageItem("Hey 👋", isFromMe = false),
-            MessageItem("Are you available for a New UI Project?", isFromMe = false),
-            MessageItem("Hello!", isFromMe = true),
-            MessageItem("Yes, have some space for the new task", isFromMe = true),
-            MessageItem("Cool, should I share the details now?", isFromMe = false),
-            MessageItem("Yes Sure, please", isFromMe = true),
-            MessageItem("Great, here is the SOW of the Project", isFromMe = false),
-        )
+fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navController: NavController) {
+    val database = FirebaseDatabase.getInstance().reference
+    var messages by remember { mutableStateOf(listOf<MessageItem>()) }
+    var messageText by remember { mutableStateOf("") }
+
+    // Fetch messages from Firebase
+    LaunchedEffect(roomId) {
+        database.child("rooms").child(roomId).child("messages")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val fetchedMessages = snapshot.children.mapNotNull {
+                        it.getValue(MessageItem::class.java)
+                    }.sortedBy { it.timestamp } // Sort messages by timestamp
+                    messages = fetchedMessages
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    println("Error fetching messages: ${error.message}")
+                }
+            })
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black) // Đặt màu nền thành màu trắng
+            .background(Color.Black) // Set background color
     ) {
         // Header
-        ChatHeader()
+        ChatHeader(navController = navController, userId = userId)
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -56,27 +74,48 @@ fun ChatDetailScreen() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             messages.forEach { message ->
-                ChatBubble(message.text, message.isFromMe)
+                ChatBubble(text = message.text, isFromMe = message.senderId == currentUserId)
             }
-
-            // File Attachment Example
-            FileAttachmentItem(fileName = "UI Brief.docx", fileSize = "269.18 KB")
         }
 
         // Input Bar
-        ChatInputBar()
+        ChatInputBar(
+            messageText = messageText,
+            onMessageTextChange = { messageText = it },
+            onSend = {
+                if (messageText.isNotBlank()) {
+                    val message = MessageItem(
+                        text = messageText,
+                        isFromMe = true,
+                        senderId = currentUserId // Add sender's ID
+                    )
+                    database.child("rooms").child(roomId).child("messages").push().setValue(message)
+                    messageText = ""
+                }
+            }
+        )
     }
 }
 
+
 @Composable
-fun ChatHeader() {
+fun ChatHeader(navController: NavController, userId: String) {
+    val database = FirebaseDatabase.getInstance().reference
+    var user by remember { mutableStateOf<User?>(null) }
+
+    LaunchedEffect(userId) {
+        database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
+            user = snapshot.getValue(User::class.java)
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* Handle back */ }) {
+        IconButton(onClick = { navController.popBackStack() }) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_back),
                 contentDescription = "Back",
@@ -87,7 +126,7 @@ fun ChatHeader() {
         Spacer(modifier = Modifier.width(8.dp))
 
         Image(
-            painter = painterResource(id = R.drawable.ic_profile_picture),
+            painter = rememberAsyncImagePainter(user?.avatar ?: R.drawable.ic_placeholder),
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(40.dp)
@@ -97,22 +136,13 @@ fun ChatHeader() {
         Spacer(modifier = Modifier.width(8.dp))
 
         Column {
-            Text("Larry Machigo", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
+            Text(user?.name ?: "User", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
             Text("Online", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { /* Handle call */ }) {
-                Icon(Icons.Outlined.Call, contentDescription = "Call", tint = Color.White)
-            }
-            IconButton(onClick = { /* Handle video call */ }) {
-                Icon(Icons.Outlined.VideoCall, contentDescription = "Video Call", tint = Color.White)
-            }
         }
     }
 }
+
+
 
 @Composable
 fun ChatBubble(text: String, isFromMe: Boolean) {
@@ -135,31 +165,14 @@ fun ChatBubble(text: String, isFromMe: Boolean) {
     }
 }
 
-@Composable
-fun FileAttachmentItem(fileName: String, fileSize: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFBB86FC), RoundedCornerShape(16.dp))
-            .padding(12.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(Icons.Filled.Attachment, contentDescription = "File", tint = Color.White)
-            Column {
-                Text(fileName, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(fileSize, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatInputBar() {
+fun ChatInputBar(
+    messageText: String,
+    onMessageTextChange: (String) -> Unit,
+    onSend: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,15 +180,9 @@ fun ChatInputBar() {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Nút Microphone
-        IconButton(onClick = { /* Handle microphone */ }) {
-            Icon(painter = painterResource(id = R.drawable.ic_microphone), contentDescription = "Microphone", tint = Color.White)
-        }
-
-        // Trường nhập văn bản
         TextField(
-            value = "",
-            onValueChange = { /* Handle text change */ },
+            value = messageText,
+            onValueChange = onMessageTextChange,
             placeholder = {
                 Text(
                     text = "Type a message",
@@ -194,23 +201,8 @@ fun ChatInputBar() {
             maxLines = 1
         )
 
-        // Nút Gửi File
-        IconButton(onClick = { /* Handle file upload */ }) {
-            Icon(painter = painterResource(id = R.drawable.ic_attach_file), contentDescription = "Attach File", tint = Color.White)
-        }
-
-        // Nút Gửi Tin nhắn
-        IconButton(onClick = { /* Handle send */ }) {
+        IconButton(onClick = { onSend() }) {
             Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color.White)
         }
     }
-}
-
-
-data class MessageItem(val text: String, val isFromMe: Boolean)
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewChatDetailScreen() {
-    ChatDetailScreen()
 }

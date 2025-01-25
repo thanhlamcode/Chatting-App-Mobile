@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
         // Lấy trạng thái đăng nhập từ SharedPreferences
         val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
-        val currentUserId = sharedPreferences.getString("currentUserId", "") ?: "" // Lấy ID người dùng hiện tại
+        val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
         val startDestination = if (isLoggedIn) "UserListScreen" else "main"
 
         setContent {
@@ -55,11 +54,20 @@ class MainActivity : ComponentActivity() {
                         ChangeNameScreen(navController = navController)
                     }
                     composable(
-                        "ChatDetailScreen/{userId}",
-                        arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                        "ChatDetailScreen/{userId}/{roomId}",
+                        arguments = listOf(
+                            navArgument("userId") { type = NavType.StringType },
+                            navArgument("roomId") { type = NavType.StringType }
+                        )
                     ) { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
-                        ChatDetailScreen(userId = userId)
+                        val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+                        ChatDetailScreen(
+                            currentUserId = currentUserId, // Truyền currentUserId từ MainActivity
+                            userId = userId,
+                            roomId = roomId,
+                            navController = navController
+                        )
                     }
                 }
             }
@@ -69,19 +77,16 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(navController: androidx.navigation.NavController) {
-    // Hình nền
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Image(
-            painter = painterResource(id = R.drawable.img), // Thay bằng hình ảnh của bạn
+            painter = painterResource(id = R.drawable.img),
             contentDescription = "Background Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
-        // Nội dung
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -89,7 +94,6 @@ fun MainScreen(navController: androidx.navigation.NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Tiêu đề
             Text(
                 text = "The best app\nfor your chatting",
                 fontSize = 52.sp,
@@ -99,17 +103,14 @@ fun MainScreen(navController: androidx.navigation.NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 32.dp)
-                    .align(Alignment.CenterHorizontally)
             )
 
-            // Nút bấm
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Nút đăng nhập
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -119,7 +120,7 @@ fun MainScreen(navController: androidx.navigation.NavController) {
                             shape = RoundedCornerShape(25.dp)
                         )
                         .clickable {
-                            navController.navigate("sign_in") // Chuyển đến màn hình đăng nhập
+                            navController.navigate("sign_in")
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -133,40 +134,15 @@ fun MainScreen(navController: androidx.navigation.NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Nút tạo tài khoản
                 Text(
                     text = "Create an account",
                     fontSize = 16.sp,
                     color = Color.White,
                     modifier = Modifier.clickable {
-                        navController.navigate("create_account") // Chuyển đến màn hình tạo tài khoản
+                        navController.navigate("create_account")
                     }
                 )
             }
         }
     }
-}
-
-@Composable
-fun ChatDetailScreen(userId: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF212121)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Chatting with user ID: $userId",
-            fontSize = 18.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    val navController = rememberNavController()
-    MainScreen(navController)
 }
