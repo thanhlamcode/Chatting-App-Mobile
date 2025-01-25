@@ -229,6 +229,7 @@ fun ChatInputBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 8.dp),
+            textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
             maxLines = 1
         )
 

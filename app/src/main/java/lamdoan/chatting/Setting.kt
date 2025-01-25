@@ -114,6 +114,7 @@ fun SettingsScreen(navController: NavController) {
             onValueChange = { displayName = it },
             label = { Text("Tên hiển thị", color = Color.White.copy(alpha = 0.5f)) },
             modifier = Modifier.fillMaxWidth(),
+            textStyle = LocalTextStyle.current.copy(color = Color.White), // Đặt màu chữ là trắng
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = Color.White,
                 unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
@@ -129,6 +130,7 @@ fun SettingsScreen(navController: NavController) {
             onValueChange = { avatarUrl = it },
             label = { Text("Nhập URL ảnh đại diện", color = Color.White.copy(alpha = 0.5f)) },
             modifier = Modifier.fillMaxWidth(),
+            textStyle = LocalTextStyle.current.copy(color = Color.White), // Đặt màu chữ là trắng
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = Color.White,
                 unfocusedBorderColor = Color.White.copy(alpha = 0.5f),

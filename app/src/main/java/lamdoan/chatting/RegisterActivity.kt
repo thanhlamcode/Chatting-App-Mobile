@@ -78,6 +78,7 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
@@ -96,6 +97,7 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
@@ -126,6 +128,7 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
@@ -145,6 +148,7 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.White), // Màu chữ trắng
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     cursorColor = Color.White,
                     focusedBorderColor = Color.White,
