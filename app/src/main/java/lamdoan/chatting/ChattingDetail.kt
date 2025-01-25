@@ -152,7 +152,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                         },
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color(0xFF673AB7))
+                        Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color(0xFF4CAF50))
                     }
                 }
             }
