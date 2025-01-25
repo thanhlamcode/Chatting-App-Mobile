@@ -49,21 +49,32 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
     val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
 
+    var userName by remember { mutableStateOf("Người dùng") }
     var room by remember { mutableStateOf<Room?>(null) }
     var messageList by remember { mutableStateOf(listOf<MessageItem>()) }
     var newMessageText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Tạo LazyListState để quản lý trạng thái cuộn
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState() // LazyListState để quản lý trạng thái cuộn
 
-    // Load or create chat room
+    // Load tên người dùng và danh sách tin nhắn
     LaunchedEffect(Unit) {
+        // Lấy tên người dùng
+        database.child("users").child(userId).child("name").get()
+            .addOnSuccessListener { snapshot ->
+                userName = snapshot.getValue(String::class.java) ?: "Người dùng"
+            }
+            .addOnFailureListener {
+                errorMessage = "Lỗi khi tải tên người dùng: ${it.message}"
+            }
+
+        // Lấy hoặc tạo phòng chat
         database.child("rooms").get().addOnSuccessListener { snapshot ->
             val rooms = snapshot.children.mapNotNull { it.getValue(Room::class.java) }
             room = rooms.find { it.userIds.containsAll(listOf(currentUserId, userId)) }
 
             if (room != null) {
+                // Lắng nghe thay đổi danh sách tin nhắn
                 database.child("rooms").child(room!!.id).child("listMessage")
                     .addChildEventListener(object : ChildEventListener {
                         override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
@@ -96,7 +107,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     }
 
-    // Cuộn xuống tin nhắn cuối cùng khi messageList thay đổi
+    // Cuộn xuống tin nhắn cuối cùng khi `messageList` thay đổi
     LaunchedEffect(messageList) {
         if (messageList.isNotEmpty()) {
             listState.animateScrollToItem(messageList.size - 1)
@@ -106,10 +117,10 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat với $userId", color = Color.White) },
+                title = { Text("Chat với $userName", color = Color.Black) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 }
             )
@@ -122,7 +133,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                     .background(Color(0xFFEDE7F6))
             ) {
                 LazyColumn(
-                    state = listState, // Gắn LazyListState vào LazyColumn
+                    state = listState, // Kết nối với LazyListState
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -204,4 +215,5 @@ fun MessageCard(message: MessageItem, currentUserId: String) {
         }
     }
 }
+
 
