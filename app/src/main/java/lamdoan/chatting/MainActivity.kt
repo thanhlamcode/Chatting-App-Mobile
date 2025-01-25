@@ -50,12 +50,6 @@ class MainActivity : ComponentActivity() {
                         // Đảm bảo truyền currentUserId vào UserListScreen
                         ChatAndUserTabsScreen(currentUserId = currentUserId, navController = navController)
                     }
-                    composable("ChangeAvatarScreen") {
-                        ChangeAvatarScreen(navController = navController)
-                    }
-                    composable("ChangeNameScreen") {
-                        ChangeNameScreen(navController = navController)
-                    }
                     composable("chat_detail/{userId}") { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
                         ChatDetailScreen(navController, userId)
