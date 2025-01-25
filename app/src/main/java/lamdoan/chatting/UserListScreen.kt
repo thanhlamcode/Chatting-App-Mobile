@@ -51,7 +51,7 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
             .background(Color(0xFF212121))
     ) {
         // Spacer để đẩy TabRow xuống dưới một chút
-        Spacer(modifier = Modifier.height(35.dp)) // Tạo khoảng cách với cạnh trên
+        Spacer(modifier = Modifier.height(40.dp)) // Tạo khoảng cách với cạnh trên
 
         // TabRow
         TabRow(
