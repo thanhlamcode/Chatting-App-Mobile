@@ -27,7 +27,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
-import lamdoan.chatting.models.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

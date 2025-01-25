@@ -24,7 +24,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
 import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.launch
-import lamdoan.chatting.models.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

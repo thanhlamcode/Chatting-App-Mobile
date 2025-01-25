@@ -26,7 +26,8 @@ data class User(
     val id: String = "",
     val name: String = "",
     val email: String = "",
-    val avatar: String = ""
+    val avatar: String = "",
+    val password: String = ""
 )
 
 data class Room(
@@ -143,125 +144,6 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UserListScreen(currentUserId: String, navController: NavController) {
-    val database = FirebaseDatabase.getInstance().reference
-    var users by remember { mutableStateOf(listOf<User>()) }
-    var rooms by remember { mutableStateOf(listOf<Room>()) }
-    var searchText by remember { mutableStateOf("") }
-
-    // Fetch data from Firebase
-    LaunchedEffect(Unit) {
-        // Fetch users
-        database.child("users").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                users = snapshot.children.mapNotNull {
-                    it.getValue(User::class.java)?.copy(id = it.key ?: "")
-                }.filter { it.id != currentUserId } // Exclude current user
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("Error fetching users: ${error.message}")
-            }
-        })
-
-        // Fetch rooms
-        database.child("rooms").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                rooms = snapshot.children.mapNotNull {
-                    it.getValue(Room::class.java)?.copy(id = it.key ?: "")
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("Error fetching rooms: ${error.message}")
-            }
-        })
-    }
-
-    // UI for user list
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF212121))
-            .padding(16.dp)
-    ) {
-        // Title
-        Text(
-            text = "Danh sách người dùng",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Search bar
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text("Tìm kiếm người dùng...", color = Color.White.copy(alpha = 0.5f)) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                cursorColor = Color.White,
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Filter and display user list
-        val filteredUsers = users.filter {
-            it.name.contains(searchText, ignoreCase = true)
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            filteredUsers.forEach { user ->
-                UserRow(
-                    name = user.name,
-                    lastMessage = user.email, // Display email as a secondary info
-                    time = 0L, // Placeholder for the last updated time
-                    isSeen = true, // Not applicable for user list
-                    avatar = user.avatar,
-                    onClick = {
-                        // Check if a chat room already exists
-                        val existingRoom = rooms.find { room ->
-                            room.userIds.contains(currentUserId) && room.userIds.contains(user.id)
-                        }
-
-                        val roomId = existingRoom?.id ?: run {
-                            // Create a new chat room
-                            val newRoom = Room(
-                                id = database.child("rooms").push().key ?: "",
-                                userIds = listOf(currentUserId, user.id),
-                                lastMessage = "",
-                                lastUpdated = System.currentTimeMillis()
-                            )
-                            database.child("rooms").child(newRoom.id).setValue(newRoom)
-                            newRoom.id
-                        }
-
-                        // Navigate to chat detail screen
-                        navController.navigate("ChatDetailScreen/${user.id}/$roomId")
-                    }
-                )
-            }
-
-            if (filteredUsers.isEmpty()) {
-                Text(
-                    text = "Không tìm thấy người dùng nào.",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 14.sp,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
-        }
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -416,7 +298,7 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
         // Nội dung cho từng tab
         when (selectedTabIndex) {
             0 -> ChatListScreen(currentUserId, navController)
-            1 -> UserListScreen(currentUserId, navController)
+            1 -> UserListScreen(navController)
             2 -> SettingsScreen(navController)
         }
     }
