@@ -108,13 +108,18 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         content = {
             Column(modifier = Modifier.fillMaxSize().padding(8.dp).background(Color(0xFFEDE7F6))) {
                 LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    reverseLayout = true
+                    modifier = Modifier.weight(1f).fillMaxWidth()
                 ) {
+                    // Thêm khoảng cách 40dp ở đầu danh sách
+                    item {
+                        Spacer(modifier = Modifier.height(40.dp))
+                    }
+
                     items(messageList) { message ->
                         MessageCard(message, currentUserId)
                     }
                 }
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
