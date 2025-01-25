@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,12 +70,14 @@ fun ChatListScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFF2C2C2C)) // Background màu xám
             .padding(16.dp)
     ) {
         Text(
             text = "Danh sách đoạn chat",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.White, // Chữ màu trắng
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -104,13 +108,18 @@ fun ChatCard(room: Room, user: User?, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .background(Color(0xFFEFEFEF))
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF3A3A3A)) // Màu nền xám đậm
             .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = rememberAsyncImagePainter(user?.avatar ?: ""),
+            painter = if (user?.avatar.isNullOrEmpty()) {
+                painterResource(id = R.drawable.ic_placeholder) // Placeholder nếu không có avatar
+            } else {
+                rememberAsyncImagePainter(user?.avatar)
+            },
             contentDescription = "Avatar",
             modifier = Modifier
                 .size(50.dp)
@@ -126,12 +135,12 @@ fun ChatCard(room: Room, user: User?, onClick: () -> Unit) {
                 text = user?.name ?: "Người dùng",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color.Black
+                color = Color.White // Tên màu trắng
             )
             Text(
                 text = room.lastMessage,
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = Color(0xFFB0B0B0), // Tin nhắn gần đây màu xám nhạt
                 maxLines = 1
             )
         }
@@ -140,7 +149,7 @@ fun ChatCard(room: Room, user: User?, onClick: () -> Unit) {
         Text(
             text = formattedTime,
             fontSize = 12.sp,
-            color = Color.Gray
+            color = Color(0xFFB0B0B0) // Thời gian màu xám nhạt
         )
     }
 }
