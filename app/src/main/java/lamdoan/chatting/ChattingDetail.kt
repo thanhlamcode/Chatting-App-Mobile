@@ -37,11 +37,9 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     var newMessageText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    val listState = rememberLazyListState() // LazyListState để quản lý trạng thái cuộn
+    val listState = rememberLazyListState()
 
-    // Load tên người dùng và danh sách tin nhắn
     LaunchedEffect(Unit) {
-        // Lấy tên người dùng
         database.child("users").child(userId).child("name").get()
             .addOnSuccessListener { snapshot ->
                 userName = snapshot.getValue(String::class.java) ?: "Người dùng"
@@ -50,13 +48,11 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                 errorMessage = "Lỗi khi tải tên người dùng: ${it.message}"
             }
 
-        // Lấy hoặc tạo phòng chat
         database.child("rooms").get().addOnSuccessListener { snapshot ->
             val rooms = snapshot.children.mapNotNull { it.getValue(Room::class.java) }
             room = rooms.find { it.userIds.containsAll(listOf(currentUserId, userId)) }
 
             if (room != null) {
-                // Lắng nghe thay đổi danh sách tin nhắn
                 database.child("rooms").child(room!!.id).child("listMessage")
                     .addChildEventListener(object : ChildEventListener {
                         override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
@@ -89,7 +85,6 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
         }
     }
 
-    // Cuộn xuống tin nhắn cuối cùng khi `messageList` thay đổi
     LaunchedEffect(messageList) {
         if (messageList.isNotEmpty()) {
             listState.animateScrollToItem(messageList.size - 1)
@@ -99,23 +94,25 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat với $userName", color = Color.Black) },
+                title = { Text("Chat với $userName", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.DarkGray)
             )
         },
-        content = {
+        content = { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.DarkGray)
+                    .padding(paddingValues) // Đảm bảo nội dung không bị đè lên TopAppBar
                     .padding(8.dp)
-                    .background(Color(0xFFEDE7F6))
             ) {
                 LazyColumn(
-                    state = listState, // Kết nối với LazyListState
+                    state = listState,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -134,7 +131,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                     TextField(
                         value = newMessageText,
                         onValueChange = { newMessageText = it },
-                        placeholder = { Text("Nhập tin nhắn...") },
+                        placeholder = { Text("Nhập tin nhắn...", color = Color.Gray) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
                         colors = TextFieldDefaults.textFieldColors(
@@ -164,7 +161,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                         },
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color(0xFF4CAF50))
+                        Icon(Icons.Filled.Send, contentDescription = "Send", tint = Color(0xFF2196F3))
                     }
                 }
             }
@@ -184,7 +181,7 @@ fun MessageCard(message: MessageItem, currentUserId: String) {
         Box(
             modifier = Modifier
                 .background(
-                    color = if (isCurrentUser) Color(0xFF673AB7) else Color(0xFFBDBDBD),
+                    color = if (isCurrentUser) Color(0xFF2196F3) else Color(0xFFBDBDBD),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(12.dp)
