@@ -152,11 +152,11 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Filtered chat rooms
+        // Filtered and sorted chat rooms
         val filteredRooms = rooms.filter { room ->
             room.userIds.contains(currentUserId) &&
                     users.any { user -> user.id in room.userIds && user.name.contains(searchText, true) }
-        }
+        }.sortedByDescending { it.lastUpdated } // Sort by lastUpdated (newest first)
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             filteredRooms.forEach { room ->
@@ -188,6 +188,7 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun UserRow(
