@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     composable("sign_in") { LoginScreen(navController = navController) }
                     composable("create_account") { SignUpScreen(navController = navController) }
                     composable("UserListScreen") {
-                        UserListScreen(currentUserId = currentUserId, navController = navController)
+                        ChatAndUserTabsScreen(currentUserId = currentUserId, navController = navController)
                     }
                     composable("ChangeAvatarScreen") {
                         ChangeAvatarScreen(navController = navController)

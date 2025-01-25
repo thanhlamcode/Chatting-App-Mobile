@@ -109,6 +109,9 @@ fun ChatHeader(navController: NavController, userId: String) {
         }
     }
 
+    Spacer(modifier = Modifier.height(35.dp)) // Tạo khoảng cách với cạnh trên
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
