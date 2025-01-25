@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +44,7 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
     val userName = sharedPreferences.getString("userName", "User")
+    val currentUserId = sharedPreferences.getString("currentUserId", "") // Get the current user ID
 
     val database = FirebaseDatabase.getInstance().reference
     var users by remember { mutableStateOf(listOf<User>()) }
@@ -55,7 +57,8 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
             override fun onDataChange(snapshot: DataSnapshot) {
                 users = snapshot.children.mapNotNull {
                     it.getValue(User::class.java)?.copy(id = it.key ?: "")
-                }
+                }.filter { it.id != currentUserId } // Exclude current user
+                println("DEBUG: Filtered users: $users")
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -76,6 +79,7 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
         })
     }
 
+    // UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -106,98 +110,29 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
 
             Button(
                 onClick = {
-                    // Xóa trạng thái đăng nhập
+                    // Logout logic
                     with(sharedPreferences.edit()) {
-                        remove("isLoggedIn")
-                        remove("userName")
+                        clear()
                         apply()
                     }
-
-                    // Điều hướng về màn hình đăng nhập
                     navController.navigate("sign_in") {
                         popUpTo("UserListScreen") { inclusive = true }
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
             ) {
-                Text("Logout", color = Color.White)
+                Text("Logout", color = Color.White, fontSize = 14.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Search Bar
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text("Search for a user", color = Color.White.copy(alpha = 0.5f)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            textStyle = LocalTextStyle.current.copy(color = Color.White),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                cursorColor = Color.White,
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                focusedLabelColor = Color.White,
-                unfocusedLabelColor = Color.White.copy(alpha = 0.5f)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Room List
-        Text(
-            text = "Chats",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            rooms.filter { room ->
-                val user = users.find { it.id in room.userIds && it.id != currentUserId }
-                user != null && user.name.contains(searchText, ignoreCase = true)
-            }.forEach { room ->
-                val user = users.find { it.id in room.userIds && it.id != currentUserId }
-                if (user != null) {
-                    UserRow(
-                        name = user.name,
-                        message = room.lastMessage,
-                        time = room.lastUpdated,
-                        avatar = user.avatar
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // User List
-        Text(
-            text = "All Users",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Filtered user list excluding the current user
+        // Filtered users
         val filteredUsers = users.filter { user ->
             user.name.contains(searchText, ignoreCase = true) && user.id != currentUserId
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Column {
             filteredUsers.forEach { user ->
                 UserRow(
                     name = user.name,
@@ -205,16 +140,6 @@ fun UserListScreen(currentUserId: String, navController: NavController) {
                     time = "",
                     avatar = user.avatar,
                     onClick = { navController.navigate("ChatDetailScreen/${user.id}") }
-                )
-            }
-
-            // Show a message if no users are found
-            if (filteredUsers.isEmpty()) {
-                Text(
-                    text = "No users found.",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 16.sp,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
         }

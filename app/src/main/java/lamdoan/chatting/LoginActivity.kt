@@ -167,11 +167,12 @@ fun LoginScreen(navController: NavController) {
                                                 true
                                             ).show()
 
-                                            // Save login state
+                                            // Save login state and user ID
                                             val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
                                             with(sharedPreferences.edit()) {
                                                 putBoolean("isLoggedIn", true)
                                                 putString("userName", user.name)
+                                                putString("currentUserId", user.id) // Save the current user ID
                                                 apply()
                                             }
 
@@ -186,6 +187,7 @@ fun LoginScreen(navController: NavController) {
                                         Toasty.info(context, "Email not found!", Toast.LENGTH_SHORT, true).show()
                                     }
                                 }
+
 
                                 override fun onCancelled(error: DatabaseError) {
                                     Toasty.error(context, "Login failed: ${error.message}", Toast.LENGTH_SHORT, true).show()

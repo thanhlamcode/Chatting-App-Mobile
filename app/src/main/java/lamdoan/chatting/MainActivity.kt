@@ -31,15 +31,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Kiểm tra trạng thái đăng nhập từ SharedPreferences
+        // Lấy trạng thái đăng nhập từ SharedPreferences
         val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+        val currentUserId = sharedPreferences.getString("currentUserId", "") ?: "" // Lấy ID người dùng hiện tại
         val startDestination = if (isLoggedIn) "UserListScreen" else "main"
 
         setContent {
             ChattingAppTheme {
                 val navController = rememberNavController()
-                val currentUserId = "currentUserId_placeholder" // Thay thế giá trị thực tế
 
                 NavHost(navController = navController, startDestination = startDestination) {
                     composable("main") { MainScreen(navController = navController) } // Màn hình chính
