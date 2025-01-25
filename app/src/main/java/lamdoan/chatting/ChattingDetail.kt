@@ -74,7 +74,11 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             messages.forEach { message ->
-                ChatBubble(text = message.text, isFromMe = message.senderId == currentUserId)
+                ChatBubble(
+                    text = message.text,
+                    isFromMe = message.senderId == currentUserId,
+                    timestamp = message.timestamp
+                )
             }
         }
 
@@ -87,9 +91,16 @@ fun ChatDetailScreen(currentUserId: String, userId: String, roomId: String, navC
                     val message = MessageItem(
                         text = messageText,
                         isFromMe = true,
-                        senderId = currentUserId // Add sender's ID
+                        senderId = currentUserId
                     )
-                    database.child("rooms").child(roomId).child("messages").push().setValue(message)
+                    val roomRef = database.child("rooms").child(roomId)
+                    val messageRef = roomRef.child("messages").push()
+
+                    messageRef.setValue(message).addOnSuccessListener {
+                        roomRef.child("lastMessage").setValue(messageText) // Cập nhật lastMessage
+                        roomRef.child("lastUpdated").setValue(System.currentTimeMillis()) // Cập nhật lastUpdated
+                    }
+
                     messageText = ""
                 }
             }
@@ -104,9 +115,15 @@ fun ChatHeader(navController: NavController, userId: String) {
     var user by remember { mutableStateOf<User?>(null) }
 
     LaunchedEffect(userId) {
-        database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
-            user = snapshot.getValue(User::class.java)
-        }
+        database.child("users").child(userId).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                user = snapshot.getValue(User::class.java)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error fetching user: ${error.message}")
+            }
+        })
     }
 
     Spacer(modifier = Modifier.height(40.dp)) // Tạo khoảng cách với cạnh trên
@@ -148,11 +165,11 @@ fun ChatHeader(navController: NavController, userId: String) {
 
 
 @Composable
-fun ChatBubble(text: String, isFromMe: Boolean) {
-    Box(
+fun ChatBubble(text: String, isFromMe: Boolean, timestamp: Long) {
+    Column(
         modifier = Modifier
             .fillMaxWidth(),
-        contentAlignment = if (isFromMe) Alignment.CenterEnd else Alignment.CenterStart
+        horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
     ) {
         Text(
             text = text,
@@ -164,6 +181,12 @@ fun ChatBubble(text: String, isFromMe: Boolean) {
                 .padding(12.dp),
             color = Color.White,
             fontSize = 16.sp
+        )
+        Text(
+            text = getTimeAgo(timestamp),
+            color = Color.Gray,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

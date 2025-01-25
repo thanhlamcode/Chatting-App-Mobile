@@ -95,6 +95,7 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
 
     // Fetch data from Firebase
     LaunchedEffect(Unit) {
+        // Fetch users
         database.child("users").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 users = snapshot.children.mapNotNull {
@@ -107,6 +108,7 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
             }
         })
 
+        // Fetch rooms
         database.child("rooms").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 rooms = snapshot.children.mapNotNull {
@@ -160,13 +162,13 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             filteredRooms.forEach { room ->
-                val otherUserId = room.userIds.first { it != currentUserId }
+                val otherUserId = room.userIds.firstOrNull { it != currentUserId }
                 val otherUser = users.find { it.id == otherUserId }
 
                 if (otherUser != null) {
                     UserRow(
                         name = otherUser.name,
-                        lastMessage = room.lastMessage,
+                        lastMessage = room.lastMessage.ifEmpty { "Chưa có tin nhắn nào" },
                         time = room.lastUpdated,
                         isSeen = room.isSeen[currentUserId] ?: true,
                         avatar = otherUser.avatar,
@@ -188,6 +190,7 @@ fun ChatListScreen(currentUserId: String, navController: NavController) {
         }
     }
 }
+
 
 
 @Composable
