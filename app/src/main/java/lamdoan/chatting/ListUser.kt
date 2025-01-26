@@ -25,7 +25,6 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.FirebaseDatabase
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserListScreen(navController: NavController) {
     val database = FirebaseDatabase.getInstance().reference
@@ -34,86 +33,48 @@ fun UserListScreen(navController: NavController) {
     val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
 
     var userList by remember { mutableStateOf(listOf<User>()) }
-    var filteredUserList by remember { mutableStateOf(listOf<User>()) }
-    var searchQuery by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
+    // Tải danh sách người dùng
     LaunchedEffect(Unit) {
         database.child("users").get()
             .addOnSuccessListener { snapshot ->
-                val users = snapshot.children.mapNotNull { child ->
-                    val userId = child.key ?: return@mapNotNull null
-                    val userName = child.child("name").getValue(String::class.java) ?: "Unknown"
-                    val avatarUrl = child.child("avatar").getValue(String::class.java) ?: ""
+                snapshot.children.forEach { child ->
+                    val userId = child.key ?: return@forEach
+                    database.child("users").child(userId).get()
+                        .addOnSuccessListener { userSnapshot ->
+                            val userName = userSnapshot.child("name").getValue(String::class.java) ?: "Người dùng"
+                            val avatarUrl = userSnapshot.child("avatar").getValue(String::class.java) ?: ""
 
-                    if (userId != currentUserId) {
-                        User(userId, userName, avatarUrl)
-                    } else {
-                        null
-                    }
+                            userList = userList + User(userId, userName, avatarUrl)
+                        }
                 }
-                userList = users
-                filteredUserList = users
-            }
-            .addOnFailureListener { error ->
-                errorMessage = "Lỗi khi tải danh sách người dùng: ${error.message}"
             }
     }
 
+    // Hiển thị giao diện danh sách người dùng
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF2C2C2C)) // Nền màu xám tối
+            .background(Color(0xFF2C2C2C))
             .padding(16.dp)
     ) {
         Text(
             text = "Danh sách người dùng",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White, // Chữ màu trắng
+            color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        // Thanh tìm kiếm
-        TextField(
-            value = searchQuery,
-            onValueChange = { query ->
-                searchQuery = query
-                filteredUserList = if (query.isEmpty()) {
-                    userList
-                } else {
-                    userList.filter { it.name.contains(query, ignoreCase = true) }
-                }
-            },
-            placeholder = {
-                Text(
-                    text = "Tìm kiếm người dùng...",
-                    color = Color(0xFFB0B0B0) // Màu placeholder xám nhạt
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Bo góc
-                .background(Color(0xFF3A3A3A)) // Màu nền xám đậm
-                .padding(horizontal = 8.dp),
-            colors = TextFieldDefaults.textFieldColors(
-                focusedTextColor = Color.White, // Màu chữ khi TextField được chọn
-                unfocusedTextColor = Color.White, // Màu chữ khi TextField không được chọn
-                containerColor = Color.Transparent, // Nền trong suốt
-                cursorColor = Color.White, // Màu con trỏ
-                focusedIndicatorColor = Color.Transparent, // Bỏ viền khi tập trung
-                unfocusedIndicatorColor = Color.Transparent // Bỏ viền khi không tập trung
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = Color.Red)
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(filteredUserList) { user ->
-                    UserCard(user = user, navController = navController)
+                items(userList) { user ->
+                    UserCard(user = user, onClick = {
+                        navController.navigate("chat_detail/${user.id}")
+                    })
                 }
             }
         }
@@ -121,46 +82,42 @@ fun UserListScreen(navController: NavController) {
 }
 
 @Composable
-fun UserCard(user: User, navController: NavController) {
+fun UserCard(user: User, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clip(RoundedCornerShape(12.dp)) // Bo góc cho card
-            .background(Color(0xFF3A3A3A)) // Nền màu xám đậm
-            .clickable {
-                navController.navigate("chat_detail/${user.id}") // Điều hướng khi nhấn
-            }
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF3A3A3A))
+            .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Hiển thị avatar
         Image(
-            painter = if (user.avatar.isEmpty()) {
-                painterResource(id = R.drawable.ic_placeholder) // Avatar mặc định
+            painter = if (user.avatar.isNotEmpty()) {
+                rememberAsyncImagePainter(model = user.avatar)
             } else {
-                rememberAsyncImagePainter(user.avatar) // Avatar từ URL
+                painterResource(id = R.drawable.ic_placeholder) // Avatar mặc định
             },
             contentDescription = "Avatar",
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(Color.Gray), // Nền xám cho avatar
+                .background(Color.Gray),
             contentScale = ContentScale.Crop
         )
 
+
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        // Hiển thị thông tin người dùng
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = user.name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color.White // Tên màu trắng
-            )
-            Text(
-                text = "ID: ${user.id}",
-                fontSize = 12.sp,
-                color = Color(0xFFB0B0B0) // ID màu xám nhạt
+                color = Color.White
             )
         }
     }

@@ -31,7 +31,6 @@ fun ChatAndUserTabsScreen(currentUserId: String, navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF212121))
-            .padding(top = 40.dp) // Cách mép trên 40dp
     ) {
         // Tabs
         TabRow(
