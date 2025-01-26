@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.FirebaseDatabase
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserListScreen(navController: NavController) {
     val database = FirebaseDatabase.getInstance().reference
@@ -33,26 +34,34 @@ fun UserListScreen(navController: NavController) {
     val currentUserId = sharedPreferences.getString("currentUserId", "") ?: ""
 
     var userList by remember { mutableStateOf(listOf<User>()) }
+    var filteredUserList by remember { mutableStateOf(listOf<User>()) }
+    var searchQuery by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
     // Tải danh sách người dùng
     LaunchedEffect(Unit) {
         database.child("users").get()
             .addOnSuccessListener { snapshot ->
-                snapshot.children.forEach { child ->
-                    val userId = child.key ?: return@forEach
-                    database.child("users").child(userId).get()
-                        .addOnSuccessListener { userSnapshot ->
-                            val userName = userSnapshot.child("name").getValue(String::class.java) ?: "Người dùng"
-                            val avatarUrl = userSnapshot.child("avatar").getValue(String::class.java) ?: ""
+                val users = snapshot.children.mapNotNull { child ->
+                    val userId = child.key ?: return@mapNotNull null
+                    val userName = child.child("name").getValue(String::class.java) ?: "Người dùng"
+                    val avatarUrl = child.child("avatar").getValue(String::class.java) ?: ""
 
-                            userList = userList + User(userId, userName, avatarUrl)
-                        }
+                    if (userId != currentUserId) {
+                        User(userId, userName, avatarUrl)
+                    } else {
+                        null
+                    }
                 }
+                userList = users
+                filteredUserList = users
+            }
+            .addOnFailureListener { error ->
+                errorMessage = "Lỗi khi tải danh sách người dùng: ${error.message}"
             }
     }
 
-    // Hiển thị giao diện danh sách người dùng
+    // Giao diện
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,11 +76,45 @@ fun UserListScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        // Thanh tìm kiếm
+        TextField(
+            value = searchQuery,
+            onValueChange = { query ->
+                searchQuery = query
+                filteredUserList = if (query.isEmpty()) {
+                    userList
+                } else {
+                    userList.filter { it.name.contains(query, ignoreCase = true) }
+                }
+            },
+            placeholder = {
+                Text(
+                    text = "Tìm kiếm người dùng...",
+                    color = Color(0xFFB0B0B0) // Màu placeholder
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFF3A3A3A)),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = Color.Transparent, // Màu nền bên trong TextField
+                unfocusedIndicatorColor = Color.Transparent, // Bỏ viền khi không focus
+                focusedIndicatorColor = Color.Transparent, // Bỏ viền khi focus
+                cursorColor = Color.White, // Màu con trỏ
+                focusedTextColor = Color.White, // Màu chữ khi TextField được focus
+                unfocusedTextColor = Color.White // Màu chữ khi TextField không được focus
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Hiển thị danh sách người dùng
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = Color.Red)
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(userList) { user ->
+                items(filteredUserList) { user ->
                     UserCard(user = user, onClick = {
                         navController.navigate("chat_detail/${user.id}")
                     })
@@ -98,7 +141,7 @@ fun UserCard(user: User, onClick: () -> Unit) {
             painter = if (user.avatar.isNotEmpty()) {
                 rememberAsyncImagePainter(model = user.avatar)
             } else {
-                painterResource(id = R.drawable.ic_placeholder) // Avatar mặc định
+                painterResource(id = R.drawable.ic_placeholder)
             },
             contentDescription = "Avatar",
             modifier = Modifier
@@ -107,7 +150,6 @@ fun UserCard(user: User, onClick: () -> Unit) {
                 .background(Color.Gray),
             contentScale = ContentScale.Crop
         )
-
 
         Spacer(modifier = Modifier.width(16.dp))
 
