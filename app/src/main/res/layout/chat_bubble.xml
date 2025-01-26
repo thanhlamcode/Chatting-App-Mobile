@@ -1,14 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/chat_bubble.xml -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="48dp"
-    android:layout_height="48dp">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-    <!-- Avatar hình tròn -->
+    <!-- Hình nền hình tròn -->
     <ImageView
         android:id="@+id/avatarBubble"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_placeholder"
         android:scaleType="centerCrop"
-        android:contentDescription="Avatar Bubble"
-        android:background="@drawable/shape_circle" />
+        android:background="@drawable/shape_circle"
+        android:padding="4dp" />
+
 </FrameLayout>
