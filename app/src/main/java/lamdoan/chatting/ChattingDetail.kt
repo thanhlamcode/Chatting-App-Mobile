@@ -1,6 +1,7 @@
 package lamdoan.chatting
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,11 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.database.*
+import android.net.Uri
+import android.provider.Settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +114,7 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Chat với $userName", color = Color.White, maxLines = 1)
+                        Text(text = "$userName", color = Color.White, maxLines = 1)
                     }
                 },
                 navigationIcon = {
@@ -121,9 +124,21 @@ fun ChatDetailScreen(navController: NavController, userId: String) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        // Tắt thông báo - Logic tùy chỉnh
+                        if (!Settings.canDrawOverlays(context)) {
+                            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                            }
+                            context.startActivity(intent)
+                        } else {
+                            // Bắt đầu ChatBubbleService
+                            startChatBubbleService(context, avatarUrl, userName)
+                        }
                     }) {
-                        Icon(Icons.Default.NotificationsOff, contentDescription = "Tắt thông báo", tint = Color.White)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_bubble),
+                            contentDescription = "Mở bong bóng chat",
+                            tint = Color.White
+                        )
                     }
                     IconButton(onClick = {
                         // Xóa toàn bộ tin nhắn
@@ -231,5 +246,14 @@ fun MessageCard(message: MessageItem, currentUserId: String) {
         }
     }
 }
+
+fun startChatBubbleService(context: Context, avatarUrl: String, userName: String) {
+    val intent = Intent(context, ChatBubbleService::class.java).apply {
+        putExtra("avatarUrl", avatarUrl)
+        putExtra("userName", userName)
+    }
+    context.startForegroundService(intent) // Chạy dịch vụ foreground
+}
+
 
 
